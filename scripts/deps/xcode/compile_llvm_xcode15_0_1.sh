@@ -21,7 +21,7 @@ cmake -GNinja -S ${LLVM_ROOT}/llvm \
       -DCMAKE_OSX_DEPLOYMENT_TARGET="13.2"
 
 ninja -C ${BUILD_ROOT} package
-cp ${BUILD_ROOT}/LLVM-14.0.0git-Darwin.tar.gz ./omvll-deps/LLVM-14.0.0git-arm64-Darwin.tar.gz
+cp ${BUILD_ROOT}/LLVM-16.0.0git-Darwin.tar.gz ./omvll-deps/LLVM-16.0.0git-arm64-Darwin.tar.gz
 rm -rf ${BUILD_ROOT}
 
 cmake -GNinja -S ${LLVM_ROOT}/llvm \
@@ -35,5 +35,5 @@ cmake -GNinja -S ${LLVM_ROOT}/llvm \
       -DCMAKE_OSX_DEPLOYMENT_TARGET="13.2"
 
 ninja -C ${BUILD_ROOT} package
-cp ${BUILD_ROOT}/LLVM-14.0.0git-Darwin.tar.gz ./omvll-deps/LLVM-14.0.0git-x86_64-Darwin.tar.gz
+cp ${BUILD_ROOT}/LLVM-16.0.0git-Darwin.tar.gz ./omvll-deps/LLVM-16.0.0git-x86_64-Darwin.tar.gz
 rm -rf ${BUILD_ROOT} && rm -rf llvm-project

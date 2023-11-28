@@ -31,9 +31,9 @@ function generate_deps() {
     cd tmp
     mkdir omvll-deps
     # Generate common elements
-    #${SCRIPT_PATH}/common/compile_cpython310.sh
-    #${SCRIPT_PATH}/common/compile_pybind11.sh
-    #${SCRIPT_PATH}/common/compile_spdlog.sh
+    ${SCRIPT_PATH}/common/compile_cpython310.sh
+    ${SCRIPT_PATH}/common/compile_pybind11.sh
+    ${SCRIPT_PATH}/common/compile_spdlog.sh
     if [ "$platform" == "ndk" ]; then
         ${SCRIPT_PATH}/ndk/compile_llvm_r25.sh
     elif [ "$platform" == "xcode" ]; then
