@@ -4,8 +4,8 @@ set -ex
 
 host=$(uname)
 
-NDK_VERSION=25.2.9519653
-MANIFEST_FILE="manifest_9352603.xml"
+NDK_VERSION=26.1.10909125
+MANIFEST_FILE="manifest_10552028.xml"
 
 if [ "$host" == "Darwin" ]; then
     ndk_platform="darwin-x86_64"
@@ -13,11 +13,11 @@ else
     ndk_platform="linux-x86_64"
 fi
 
-mkdir android-llvm-toolchain-r25c && cd android-llvm-toolchain-r25c
+mkdir android-llvm-toolchain-r26b && cd android-llvm-toolchain-r26b
 repo init -u https://android.googlesource.com/platform/manifest -b llvm-toolchain
 
-cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${MANIFEST_FILE} .repo/manifests/
-repo init -m ${MANIFEST_FILE}
+cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${manifest} .repo/manifests/
+repo init -m ${manifest}
 repo sync -c
 
 python3 toolchain/llvm_android/build.py --skip-tests
@@ -30,13 +30,13 @@ zero_out.sh $NDK_STAGE1
 zero_out.sh $NDK_STAGE2
 
 # Generate final package
-mkdir -p android-llvm-toolchain-r25c/out && cd android-llvm-toolchain-r25c/out
+mkdir -p android-llvm-toolchain-r26b/out && cd android-llvm-toolchain-r26b/out
 cp -r ${NDK_STAGE1} .
 cp -r ${NDK_STAGE2} .
 
 cd .. && tar czf out.tar.gz out && rm -rf out
-cd .. && tar czf android-llvm-toolchain-r25c.tar.gz android-llvm-toolchain-r25c
+cd .. && tar czf android-llvm-toolchain-r26b.tar.gz android-llvm-toolchain-r26b
 
 # Clean up
-rm -rf android-llvm-toolchain-r25c
+rm -rf android-llvm-toolchain-r26b
 

@@ -84,5 +84,3 @@ if [ $platform != "android" ] && [ $platform  != "xcode" ]; then
 fi
 
 generate_deps
-rc=$?
-return rc
