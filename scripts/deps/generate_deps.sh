@@ -37,7 +37,7 @@ function generate_deps() {
     if [ "$platform" == "ndk" ]; then
         ${SCRIPT_PATH}/ndk/compile_llvm_r25.sh
     elif [ "$platform" == "xcode" ]; then
-        ${SCRIPT_PATH}/xcode/compile_llvm_xcode15_1.sh
+        ${SCRIPT_PATH}/xcode/compile_llvm_xcode15_0_1.sh
     fi
     # Generate tar
     tar -czvf deps.tar.gz omvll-deps
