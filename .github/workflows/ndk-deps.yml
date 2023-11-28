@@ -1,0 +1,20 @@
+name: 'DEPS for O-MVLL NDK'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: O-MVLL DEPS generation for ndk
+        shell: bash
+        run: |
+          ./scripts/deps/generate_deps.sh -p ndk -o ./omvll-deps-ndk-r25c.tar.gz
+      - name: NDK deps Deployment
+        env:
+          OMVLL_S3_KEY: ${{ secrets.OMVLL_S3_KEY }}
+          OMVLL_S3_SECRET: ${{ secrets.OMVLL_S3_SECRET }}
+        shell: bash
+        run: |
+          ls -la
