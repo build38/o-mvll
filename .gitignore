@@ -12,3 +12,6 @@
 
 # python cache folders for tests
 __pycache__
+
+# tmp folder due deps generation
+tmp
