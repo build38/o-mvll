@@ -16,8 +16,8 @@ fi
 mkdir android-llvm-toolchain-r26b && cd android-llvm-toolchain-r26b
 repo init -u https://android.googlesource.com/platform/manifest -b llvm-toolchain
 
-cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${manifest} .repo/manifests/
-repo init -m ${manifest}
+cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${MANIFEST_FILE} .repo/manifests/
+repo init -m ${MANIFEST_FILE}
 repo sync -c
 
 python3 toolchain/llvm_android/build.py --skip-tests
