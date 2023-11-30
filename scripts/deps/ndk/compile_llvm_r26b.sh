@@ -23,7 +23,7 @@ repo sync -c
 python3 toolchain/llvm_android/build.py --skip-tests
 
 export NDK_STAGE1=$(pwd)/out/stage1-install
-export NDK_STAGE2=$(pwd)/out/stage2-install
+export NDK_STAGE2=$(pwd)/out/stage2
 
 # Cleanup stages folder before generating final package
 zero_out.sh $NDK_STAGE1
@@ -35,8 +35,8 @@ cp -r ${NDK_STAGE1} .
 cp -r ${NDK_STAGE2} .
 
 cd .. && tar czf out.tar.gz out && rm -rf out
-cd .. && tar czf android-llvm-toolchain-r26b.tar.gz android-llvm-toolchain-r26b
+cd .. && tar czf ../omvll-deps/android-llvm-toolchain-r26b.tar.gz android-llvm-toolchain-r26b
 
 # Clean up
-rm -rf android-llvm-toolchain-r26b
+rm -rf ../android-llvm-toolchain-r26b
 
