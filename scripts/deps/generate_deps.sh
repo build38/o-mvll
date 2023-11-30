@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -e
 
 SCRIPT_PATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 platform=""
@@ -17,7 +17,7 @@ function task_print_usage() {
     echo "      xcode                 Build deps from xcode environment"
     echo ""
     echo ""
-    "------------------------------------------------------------------------------"
+    echo "------------------------------------------------------------------------------"
     echo "Output:"
     echo "  choose an output path where deps tar.gz will be generated -o | --output <output>   , e.g -o ./my-deps.tar.gz"
     echo ""
@@ -77,7 +77,7 @@ case $key in
 esac
 done
 
-if [ $platform != "android" ] && [ $platform  != "xcode" ]; then
+if [ $platform != "ndk" ] && [ $platform  != "xcode" ]; then
    echo "Please specify a valid --platform"
    echo "For more information use --help"
    exit 1

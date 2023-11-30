@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script is used to compile xcode llvm
-set -ex
+set -e
 LLVM_TARGET="AArch64;X86"
 
 git clone -j8 --branch swift/release/5.7 --single-branch --depth 1 \

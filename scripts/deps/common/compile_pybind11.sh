@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script is used to compile pybind11
-set -ex
+set -e
 
 curl -LO https://github.com/pybind/pybind11/archive/refs/tags/v2.10.3.tar.gz
 tar xzvf v2.10.3.tar.gz

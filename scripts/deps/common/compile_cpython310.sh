@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script is used to compile cpython
-set -ex
+set -e
 
 curl -LO https://www.python.org/ftp/python/3.10.7/Python-3.10.7.tgz
 tar xzvf Python-3.10.7.tgz

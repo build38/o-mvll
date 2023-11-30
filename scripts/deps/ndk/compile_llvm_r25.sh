@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script is used to compile ndkr25c
-set -ex
+set -e
 
 host=$(uname)
 

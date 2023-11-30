@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # This script is used to compile cpython
-set -ex
+set -e
 
 curl -LO https://github.com/gabime/spdlog/archive/refs/tags/v1.10.0.tar.gz
 tar xzvf v1.10.0.tar.gz
