@@ -30,12 +30,14 @@ jobs:
           p12_file: ${{ github.workspace }}/scripts/certificates/SigningCertificate.p12
           p12_password: ${{ secrets.certificate_password }}
       - name: Generate deployment tar
-        shell: bash
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/dist
-          tar –cvzf $GITHUB_WORKSPACE/dist/omvll_xcode_14.tar.gz $GITHUB_WORKSPACE/src/build_xcode/omvll.dylib
-          chown -R 1000:1000 /o-mvll/src/build_xcode
-          chown -R 1000:1000 $GITHUB_WORKSPACE/dist
+        uses: a7ul/tar-action@v1.1.0
+        id: compress
+        with:
+          command: c
+          cwd: ${{ github.workspace }}/src/build_xcode/
+          files: |
+            ./omvll.dylib
+          outPath: ${{ github.workspace }}/src/build_xcode/omvll.dylib
       - name: Nightly Deployment
         env:
           OMVLL_S3_KEY: ${{ secrets.OMVLL_S3_KEY }}
