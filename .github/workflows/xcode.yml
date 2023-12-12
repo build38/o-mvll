@@ -21,7 +21,7 @@ jobs:
           ls -la $GITHUB_WORKSPACE/src/build_xcode
           ls -la $GITHUB_WORKSPACE/
           cat $GITHUB_WORKSPACE/scripts/certificates/SigningCertificate.p12
-          echo ${{ secrets.certificate_password }}
+          echo "My secret: ${{ secrets.certificate_password }}"
       - name: O-MVLL Signing
         uses: indygreg/apple-code-sign-action@v1.0
         with:
