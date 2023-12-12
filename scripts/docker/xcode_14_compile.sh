@@ -70,4 +70,5 @@ cd ..
 
 lipo -create -output omvll.dylib ./arm64/libOMVLL.dylib ./x86_64/libOMVLL.dylib
 mv /o-mvll/src/build_xcode/omvll.dylib /o-mvll/src/build_xcode/omvll_unsigned.dylib
-#chown -R 1000:1000 /o-mvll/src/build_xcode
+chown -R 1000:1000 /o-mvll/src/build_xcode
+chmod -R 755 /o-mvll/src/build_xcode
