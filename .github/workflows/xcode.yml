@@ -25,9 +25,9 @@ jobs:
       - name: O-MVLL Signing
         uses: indygreg/apple-code-sign-action@v1.0
         with:
-          input_path: $GITHUB_WORKSPACE/src/build_xcode/omvll_unsigned.dylib
-          output_path: $GITHUB_WORKSPACE/src/build_xcode/omvll.dylib
-          p12_file: $GITHUB_WORKSPACE/scripts/certificates/SigningCertificate.p12
+          input_path: ${{ github.workspace }}/src/build_xcode/omvll_unsigned.dylib
+          output_path: ${{ github.workspace }}/src/build_xcode/omvll.dylib
+          p12_file: ${{ github.workspace }}/scripts/certificates/SigningCertificate.p12
           p12_password: ${{ secrets.certificate_password }}
       - name: Generate deployment tar
         shell: bash
