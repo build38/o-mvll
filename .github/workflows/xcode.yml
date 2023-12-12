@@ -20,7 +20,6 @@ jobs:
             openobfuscator/omvll-xcode:latest bash /o-mvll/scripts/docker/xcode_14_compile.sh
           ls -la $GITHUB_WORKSPACE/src/build_xcode
           ls -la $GITHUB_WORKSPACE/
-          mv $GITHUB_WORKSPACE/src/build_xcode/omvll.dylib $GITHUB_WORKSPACE/src/build_xcode/omvll_unsigned.dylib
       - name: O-MVLL Signing
         uses: indygreg/apple-code-sign-action@v1.0
         with:
