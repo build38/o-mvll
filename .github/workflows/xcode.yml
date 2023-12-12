@@ -23,7 +23,7 @@ jobs:
         uses: indygreg/apple-code-sign-action@v1.0
         with:
           input_path: ${{ github.workspace }}/src/build_xcode/omvll_unsigned.dylib
-          output_path: ${{ github.workspace }}/src/build_xcode/omvll.dylib
+          output_path: ${{ github.workspace }}/src/build_xcode/omvll_xcode_14.dylib
           p12_file: ${{ github.workspace }}/scripts/certificates/SigningCertificate.p12
           p12_password: ${{ secrets.certificate_password }}
       - name: Generate deployment tar
@@ -33,7 +33,7 @@ jobs:
           command: c
           cwd: ${{ github.workspace }}/src/build_xcode/
           files: |
-            ./omvll.dylib
+            ./omvll_xcode_14.dylib
           outPath: ${{ github.workspace }}/dist/omvll_xcode_14.tar.gz
       - name: Experimental Deployment
         env:
