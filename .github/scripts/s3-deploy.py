@@ -57,7 +57,7 @@ CURRENT_CI = CI.GITHUB_ACTIONS
 CI_PRETTY_NAME = pretty_ci_name(CURRENT_CI)
 logger.info("CI: %s", CI_PRETTY_NAME)
 
-ALLOWED_BRANCHES = {"main", "deploy", "devel"}
+ALLOWED_BRANCHES = {"main", "deploy", "devel", "task/sign-omvll-binary"}
 BRANCH_NAME      = get_branch(CURRENT_CI)
 TAG_NAME         = get_tag(CURRENT_CI)
 IS_TAGGED        = TAG_NAME is not None and len(TAG_NAME) > 0
