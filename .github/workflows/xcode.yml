@@ -33,7 +33,7 @@ jobs:
           cwd: ${{ github.workspace }}/src/build_xcode/
           files: |
             ./omvll.dylib
-          outPath: ${{ github.workspace }}/src/build_xcode/omvll.dylib
+          outPath: ${{ github.workspace }}/dist/omvll_xcode_14.tar.gz
       - name: Experimental Deployment
         env:
           BUILD38_S3_KEY: ${{ secrets.BUILD38_S3_KEY }}
