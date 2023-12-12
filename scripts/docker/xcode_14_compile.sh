@@ -70,8 +70,4 @@ cd ..
 
 lipo -create -output omvll.dylib ./arm64/libOMVLL.dylib ./x86_64/libOMVLL.dylib
 
-mkdir -p /o-mvll/dist
-python3 /o-mvll/scripts/package.py -t xcode_14 /o-mvll/src/build_xcode/omvll.dylib /o-mvll/dist/omvll_xcode_14.tar.gz
-
 chown -R 1000:1000 /o-mvll/src/build_xcode
-chown -R 1000:1000 /o-mvll/dist

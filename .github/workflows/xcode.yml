@@ -18,6 +18,23 @@ jobs:
             -v /tmp/third-party-xcode14:/third-party \
             -v $GITHUB_WORKSPACE:/o-mvll \
             openobfuscator/omvll-xcode:latest bash /o-mvll/scripts/docker/xcode_14_compile.sh
+          mv $GITHUB_WORKSPACE/src/build_xcode/omvll.dylib $GITHUB_WORKSPACE/src/build_xcode/omvll_unsigned.dylib
+      - name: O-MVLL Signing
+        uses: indygreg/apple-code-sign-action@v1.0
+        with:
+          input_path: $GITHUB_WORKSPACE/src/build_xcode/omvll_unsigned.dylib
+          output_path: $GITHUB_WORKSPACE/src/build_xcode/omvll.dylib
+          p12_file: $GITHUB_WORKSPACE/scripts/certificates/SigningCertificate.p12
+          p12_password: ${{ secrets.certificate_password }}
+      - name: Generate deployment tar
+        shell: bash
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/dist
+          docker run --rm \
+            -v /tmp/third-party-xcode14:/third-party \
+            -v $GITHUB_WORKSPACE:/o-mvll \
+            openobfuscator/omvll-xcode:latest bash python3 /o-mvll/scripts/package.py -t xcode_14 /o-mvll/src/build_xcode/omvll.dylib /o-mvll/dist/omvll_xcode_14.tar.gz
+          chown -R 1000:1000 $GITHUB_WORKSPACE/dist
       - name: Nightly Deployment
         env:
           OMVLL_S3_KEY: ${{ secrets.OMVLL_S3_KEY }}
