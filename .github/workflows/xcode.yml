@@ -30,7 +30,7 @@ jobs:
           p12_file: ${{ github.workspace }}/scripts/certificates/SigningCertificate.p12
           p12_password: ${{ secrets.certificate_password }}
       - name: Generate deployment tar
-        uses: a7ul/tar-action@v1.1.0
+        uses: a7ul/tar-action@v1.1.3
         id: compress
         with:
           command: c
