@@ -69,5 +69,3 @@ ninja
 cd ..
 
 lipo -create -output omvll.dylib ./arm64/libOMVLL.dylib ./x86_64/libOMVLL.dylib
-
-chown -R 1000:1000 /o-mvll/src/build_xcode

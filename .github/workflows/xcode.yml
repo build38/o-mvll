@@ -34,6 +34,7 @@ jobs:
             -v /tmp/third-party-xcode14:/third-party \
             -v $GITHUB_WORKSPACE:/o-mvll \
             openobfuscator/omvll-xcode:latest bash python3 /o-mvll/scripts/package.py -t xcode_14 /o-mvll/src/build_xcode/omvll.dylib /o-mvll/dist/omvll_xcode_14.tar.gz
+          chown -R 1000:1000 /o-mvll/src/build_xcode
           chown -R 1000:1000 $GITHUB_WORKSPACE/dist
       - name: Nightly Deployment
         env:
