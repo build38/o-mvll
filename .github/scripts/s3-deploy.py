@@ -65,6 +65,15 @@ IS_TAGGED        = TAG_NAME is not None and len(TAG_NAME) > 0
 logger.info("Branch: %s", BRANCH_NAME)
 logger.info("Tag:    %s", TAG_NAME)
 
+if BRANCH_NAME.startswith("release-"):
+    logger.info("Branch release")
+elif BRANCH_NAME not in ALLOWED_BRANCHES and not IS_TAGGED:
+    logger.info("Skip deployment for branch '%s'", BRANCH_NAME)
+    sys.exit(0)
+
+if is_pr(CURRENT_CI):
+    logger.info("Skip pull request")
+    sys.exit(0)
 
 CURRENTDIR = pathlib.Path(__file__).resolve().parent
 REPODIR    = CURRENTDIR / ".." / ".."
