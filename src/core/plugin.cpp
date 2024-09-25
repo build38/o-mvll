@@ -138,11 +138,13 @@ PassPluginLibraryInfo getOMVLLPluginInfo() {
                     REGISTER_PASS(omvll::OpaqueConstants);
                     REGISTER_PASS(omvll::Arithmetic);
 
+#ifdef OMVLL_EXPERIMENTAL
                     /* ObjCleaner must be the last pass as function's name could be
                      * changed, which can be confusing of the user
                      */
                     REGISTER_PASS(omvll::ObjCleaner);
                     REGISTER_PASS(omvll::Cleaning);
+#endif
                   }
                   ONCE_FLAG = true;
                   return true;
