@@ -30,12 +30,11 @@ class MemoryBuffer;
 
 namespace omvll {
 
+inline std::string tripleToStr(std::string S) { return S; }
+inline std::string tripleToStr(const llvm::Triple &T) { return T.str(); }
+
 inline std::string getModuleTripleStr(const llvm::Module &M) {
-#if LLVM_VERSION_MAJOR >= 20
-  return M.getTargetTriple().str();
-#else
-  return M.getTargetTriple();
-#endif
+  return tripleToStr(M.getTargetTriple());
 }
 
 std::string ToString(const llvm::Module &M);

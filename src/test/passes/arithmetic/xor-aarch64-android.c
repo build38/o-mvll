@@ -29,61 +29,48 @@
 
 // R2-LABEL: memcpy_xor:
 // R2:       .LBB0_2:
-// R2-NEXT:     mov	w11, w9
-// R2-NEXT: 	orr	w13, w9, #0x1
-// R2-NEXT: 	ldrb	w12, [x1, x11]
-// R2-NEXT: 	orn	w14, w8, w12
-// R2-NEXT: 	and	w15, w12, w10
-// R2-NEXT: 	add	w12, w12, w14
-// R2-NEXT: 	neg	w14, w15
-// R2-NEXT: 	mvn	w15, w9
-// R2-NEXT: 	add	w12, w12, #36
-// R2-NEXT: 	add	w9, w9, w13
-// R2-NEXT: 	orr	w15, w15, #0x1
-// R2-NEXT: 	and	w13, w12, w14
-// R2-NEXT: 	add	w9, w9, w15
-// R2-NEXT: 	eor	w12, w12, w14
-// R2-NEXT: 	add	w9, w9, #1
-// R2-NEXT: 	add	w12, w12, w13, lsl #1
-// R2-NEXT: 	cmp	w9, w2
-// R2-NEXT: 	strb	w12, [x0, x11]
-// R2-NEXT: 	b.lo	.LBB0_2
+// R2-NEXT:	ldrb	w12, [x1], #1
+// R2-NEXT:	subs	x8, x8, #1
+// R2-NEXT:	orn	w13, w9, w12
+// R2-NEXT:	add	w13, w12, w13
+// R2-NEXT:	and	w12, w12, w10
+// R2-NEXT:	add	w13, w13, #36
+// R2-NEXT:	neg	w12, w12
+// R2-NEXT:	eor	w14, w13, w12
+// R2-NEXT:	and	w12, w13, w12
+// R2-NEXT:	add	w12, w14, w12, lsl #1
+// R2-NEXT:	strb	w12, [x11], #1
+// R2-NEXT:	b.ne	.LBB0_2
 
 // R3-LABEL: memcpy_xor:
 // R3:       .LBB0_2:
-// R3-NEXT:     mov	w15, w9
-// R3-NEXT: 	sub	w16, w13, w9
-// R3-NEXT: 	orr	w3, w9, #0xfffffffe
-// R3-NEXT: 	lsl	w4, w9, #1
-// R3-NEXT: 	add	w3, w16, w3
-// R3-NEXT: 	add	w16, w16, w4
-// R3-NEXT: 	ldrb	w17, [x1, x15]
-// R3-NEXT: 	eor	w5, w16, w3
-// R3-NEXT: 	and	w16, w16, w3
-// R3-NEXT: 	bic	w4, w14, w4
-// R3-NEXT: 	eor	w3, w17, w8
-// R3-NEXT: 	and	w6, w17, w10
-// R3-NEXT: 	eor	w6, w6, w11
-// R3-NEXT: 	add	w3, w3, w17
-// R3-NEXT: 	and	w17, w17, w8
-// R3-NEXT: 	add	w3, w3, w6
-// R3-NEXT: 	neg	w6, w17
-// R3-NEXT: 	sub	w7, w12, w3
-// R3-NEXT: 	and	w19, w7, w6
-// R3-NEXT: 	orr	w6, w7, w6
-// R3-NEXT: 	add	w17, w17, w3
-// R3-NEXT: 	add	w3, w3, w6
-// R3-NEXT: 	mvn	w6, w9
-// R3-NEXT: 	add	w9, w16, w9
-// R3-NEXT: 	orr	w6, w6, #0x1
-// R3-NEXT: 	add	w17, w17, w19, lsl #1
-// R3-NEXT: 	add	w16, w4, w6
-// R3-NEXT: 	add	w17, w17, w3, lsl #1
-// R3-NEXT: 	add	w16, w16, w5
-// R3-NEXT: 	add	w17, w17, #110
-// R3-NEXT: 	add	w9, w16, w9, lsl #1
-// R3-NEXT: 	cmp	w9, w2
-// R3-NEXT: 	strb	w17, [x0, x15]
+// R3-NEXT: 	ldrb	w12, [x1, w8, uxtw]
+// R3-NEXT: 	mvn	w15, w8
+// R3-NEXT: 	and	w17, w8, #0x1
+// R3-NEXT: 	bic	w3, w11, w8, lsl #1
+// R3-NEXT: 	orr	w15, w15, #0x1
+// R3-NEXT: 	add	w17, w8, w17
+// R3-NEXT: 	add	w13, w12, #36
+// R3-NEXT: 	and	w14, w12, w9
+// R3-NEXT: 	sub	w12, w10, w12
+// R3-NEXT: 	sub	w16, w14, w13
+// R3-NEXT: 	sub	w14, w13, w14
+// R3-NEXT: 	sub	w12, w12, w16
+// R3-NEXT: 	and	w4, w12, w16
+// R3-NEXT: 	orr	w12, w12, w16
+// R3-NEXT: 	add	w16, w8, #1
+// R3-NEXT: 	add	w12, w14, w12
+// R3-NEXT: 	add	w14, w17, w3
+// R3-NEXT: 	eor	w17, w16, w15
+// R3-NEXT: 	add	w12, w4, w12
+// R3-NEXT: 	and	w15, w16, w15
+// R3-NEXT: 	add	w14, w14, w17
+// R3-NEXT: 	add	w12, w13, w12, lsl #1
+// R3-NEXT: 	add	w13, w14, w15, lsl #1
+// R3-NEXT: 	sub	w12, w12, #1
+// R3-NEXT: 	strb	w12, [x0, w8, uxtw]
+// R3-NEXT: 	sub	w8, w13, #1
+// R3-NEXT: 	cmp	w8, w2
 // R3-NEXT: 	b.lo	.LBB0_2
 
 

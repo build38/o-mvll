@@ -9,7 +9,7 @@ set -ex
 cd /deps
 tar xzvf LLVM-21.1.6-arm64-Darwin.tar.gz
 tar xzvf LLVM-21.1.6-x86_64-Darwin.tar.gz
-tar xzvf LLVM17-NDK26-Darwin.tar.gz
+tar xzvf LLVM21-NDK29-Darwin.tar.gz
 tar xzvf Python-slim.tar.gz
 tar xzvf pybind11.tar.gz
 tar xzvf spdlog-1.10.0-Darwin.tar.gz
@@ -83,7 +83,7 @@ cmake -GNinja -Bndk-arm64 -S.. \
       -DPython3_INCLUDE_DIR=/deps/include/python3.10 \
       -Dpybind11_DIR=/deps/share/cmake/pybind11 \
       -Dspdlog_DIR=/deps/lib/cmake/spdlog \
-      -DLLVM_DIR=/deps/LLVM17-NDK26-Darwin/lib/cmake/llvm \
+      -DLLVM_DIR=/deps/LLVM21-NDK29-Darwin/lib/cmake/llvm \
       -DOMVLL_ABI=Android
 ninja -C ndk-arm64
 
@@ -122,7 +122,7 @@ cmake -GNinja -Bndk-x86_64 -S.. \
       -DPython3_INCLUDE_DIR=/deps/include/python3.10 \
       -Dpybind11_DIR=/deps/share/cmake/pybind11 \
       -Dspdlog_DIR=/deps/lib/cmake/spdlog \
-      -DLLVM_DIR=/deps/LLVM17-NDK26-Darwin/lib/cmake/llvm \
+      -DLLVM_DIR=/deps/LLVM21-NDK29-Darwin/lib/cmake/llvm \
       -DOMVLL_ABI=Android
 ninja -C ndk-x86_64
 

@@ -1,8 +1,8 @@
 ;
 ; This file is distributed under the Apache License v2.0. See LICENSE for details.
 ;
-
-; REQUIRES: aarch64-registered-target && apple_abi
+ 
+; REQUIRES: aarch64-registered-target
 
 ;     RUN: env OMVLL_CONFIG=%S/config_replace.py clang++ -fpass-plugin=%libOMVLL \
 ;     RUN:         -target arm64-apple-ios26.0.0 -O1 -S -emit-llvm %s -o - | FileCheck %s
@@ -32,7 +32,7 @@ define void @copy(ptr %p) {
 ; CHECK-NEXT:    [[FLAG:%.*]] = load i1, ptr @1, align 1
 ; CHECK-NEXT:    br i1 [[FLAG]], label %[[EXIT1:.*]], label %[[BB1:.*]]
 ; CHECK:       [[BB1]]:
-; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 8, ptr nonnull [[ALLOCA1]])
+; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 8, ptr nonnull [[ALLOCA1:%.*]])
 ; CHECK-NEXT:    store i64 [[ASM]], ptr [[ALLOCA1]], align 8
 ; CHECK-NEXT:    br label %[[LOOP1:.*]]
 ; CHECK:       [[LOOP1]]:
@@ -56,7 +56,7 @@ define void @copy(ptr %p) {
 ; CHECK-NEXT:    [[FLAG2:%.*]] = load i1, ptr @3, align 1
 ; CHECK-NEXT:    br i1 [[FLAG2]], label %[[EXIT2:.*]], label %[[BB2:.*]]
 ; CHECK:       [[BB2]]:
-; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 8, ptr nonnull [[ALLOCA2]])
+; CHECK-NEXT:    call void @llvm.lifetime.start.p0(i64 8, ptr nonnull [[ALLOCA2:%.*]])
 ; CHECK-NEXT:    store i64 [[ASM2]], ptr [[ALLOCA2]], align 8
 ; CHECK-NEXT:    br label %[[LOOP2:.*]]
 ; CHECK:       [[LOOP2]]:

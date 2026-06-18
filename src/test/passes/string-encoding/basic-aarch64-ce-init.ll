@@ -2,7 +2,7 @@
 ; This file is distributed under the Apache License v2.0. See LICENSE for details.
 ;
 
-; REQUIRES: aarch64-registered-target && android_abi
+; REQUIRES: aarch64-registered-target
 
 ;     RUN: env OMVLL_CONFIG=%S/config_replace.py clang++ -fpass-plugin=%libOMVLL \
 ;     RUN:         -target arm64-apple-ios26.0.0  -O1 -S -emit-llvm %s -o - | FileCheck %s
@@ -28,12 +28,12 @@ define i32 @main() {
 ; CHECK-NEXT:    br label %[[LOOP:.*]]
 ; CHECK:       [[LOOP]]:
 ; CHECK-NEXT:    [[IDX:%.*]] = phi i64 [ 0, %[[BB]] ], [ [[IDX_NEXT:%.*]], %[[LOOP]] ]
-; CHECK-NEXT:    [[SRC_GEP:%.*]] = getelementptr inbounds i8, ptr @{{.*}}, i64 [[IDX]]
+; CHECK-NEXT:    [[SRC_GEP:%.*]] = getelementptr inbounds nuw i8, ptr @{{.*}}, i64 [[IDX]]
 ; CHECK-NEXT:    [[SRC_BYTE:%.*]] = load i8, ptr [[SRC_GEP]], align 1
-; CHECK-NEXT:    [[KEY_GEP:%.*]] = getelementptr inbounds i8, ptr [[ALLOCA]], i64 [[IDX]]
+; CHECK-NEXT:    [[KEY_GEP:%.*]] = getelementptr inbounds nuw i8, ptr [[ALLOCA]], i64 [[IDX]]
 ; CHECK-NEXT:    [[KEY_BYTE:%.*]] = load i8, ptr [[KEY_GEP]], align 1
 ; CHECK-NEXT:    [[XOR:%.*]] = xor i8 [[KEY_BYTE]], [[SRC_BYTE]]
-; CHECK-NEXT:    [[DST_GEP:%.*]] = getelementptr inbounds i8, ptr @0, i64 [[IDX]]
+; CHECK-NEXT:    [[DST_GEP:%.*]] = getelementptr inbounds nuw i8, ptr @0, i64 [[IDX]]
 ; CHECK-NEXT:    store i8 [[XOR]], ptr [[DST_GEP]], align 1
 ; CHECK-NEXT:    [[IDX_NEXT]] = add nuw nsw i64 [[IDX]], 1
 ; CHECK-NEXT:    [[DONE:%.*]] = icmp eq i64 [[IDX_NEXT]], 6
