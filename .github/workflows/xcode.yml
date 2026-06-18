@@ -40,6 +40,13 @@ jobs:
           output_path: ${{ github.workspace }}/src/build_xcode/omvll-ndk.dylib
           p12_file: ${{ github.workspace }}/scripts/certificates/SigningCertificate.p12
           p12_password: ${{ secrets.certificate_password }}
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: omvll-plugins
+          path: |
+            ${{ github.workspace }}/src/build_xcode/omvll-xcode.dylib
+            ${{ github.workspace }}/src/build_xcode/omvll-ndk.dylib
       - name: Generate distribution folder
         shell: bash
         run: |
