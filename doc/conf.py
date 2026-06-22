@@ -84,7 +84,7 @@ author        = 'Romain Thomas'
 source_suffix = '.rst'
 master_doc    = 'index'
 
-version = omvll.OMVLL_VERSION
+version = getattr(omvll, "OMVLL_VERSION", "dev")
 release = version
 
 
