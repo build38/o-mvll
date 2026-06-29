@@ -138,19 +138,25 @@ if(NOT APPLE)
 endif()
 
 if(APPLE)
-  # ld64 resolves every entry in -exported_symbols_list against the link unit;
-  # the ORC EH-frame helpers were renamed in LLVM 20 (Wrapper -> AllocAction),
-  # but NDK LLVM builds still ship the Wrapper variants regardless of version.
-  if(LLVM_VERSION_MAJOR GREATER_EQUAL 20 AND NOT OMVLL_ABI STREQUAL "Android")
-    set(OMVLL_EXPORTS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/exports.txt")
-  else()
-    set(OMVLL_EXPORTS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/exports.legacy.txt")
-  endif()
   list(APPEND OMVLL_LINK_OPT
     -Wl,-flat_namespace
     -Wl,-undefined,dynamic_lookup
-    -Wl,-exported_symbols_list,${OMVLL_EXPORTS_LIST}
   )
+  # Restrict exports to the pass-plugin entry points; the standalone module
+  # skips this so pybind11's PyInit_omvll stays importable.
+  if(NOT OMVLL_PY_STANDALONE)
+    # ld64 resolves every entry in -exported_symbols_list against the link unit;
+    # the ORC EH-frame helpers were renamed in LLVM 20 (Wrapper -> AllocAction),
+    # but NDK LLVM builds still ship the Wrapper variants regardless of version.
+    if(LLVM_VERSION_MAJOR GREATER_EQUAL 20 AND NOT OMVLL_ABI STREQUAL "Android")
+      set(OMVLL_EXPORTS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/exports.txt")
+    else()
+      set(OMVLL_EXPORTS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/exports.legacy.txt")
+    endif()
+    list(APPEND OMVLL_LINK_OPT
+      -Wl,-exported_symbols_list,${OMVLL_EXPORTS_LIST}
+    )
+  endif()
 endif()
 
 target_link_options(OMVLL PUBLIC ${OMVLL_LINK_OPT})
@@ -197,6 +203,11 @@ if (OMVLL_PY_STANDALONE)
   find_package(Clang REQUIRED CONFIG NO_DEFAULT_PATH)
   include_directories(SYSTEM ${CLANG_INCLUDE_DIRS})
   set_target_properties(OMVLL PROPERTIES PREFIX "" OUTPUT_NAME "omvll" CLEAN_DIRECT_OUTPUT 1)
+  if(APPLE)
+    # Python's import machinery loads extension modules with a ".so" suffix even
+    # on macOS; without this the target would be built as "omvll.dylib"
+    set_target_properties(OMVLL PROPERTIES SUFFIX ".so")
+  endif()
   list(APPEND LLVM_LIBS_DEP
     core
     support

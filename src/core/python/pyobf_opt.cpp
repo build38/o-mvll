@@ -19,105 +19,121 @@ py::module_ &py_init_obf_opt(py::module_ &m) {
   // Strings Encoding
   py::class_<StringEncOptSkip>(m, "StringEncOptSkip",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_string` protection.
-
-    This option can be used to **not** protect the string given in the callback's parameters.
-    )delim")
-    .def(py::init<>());
-
-  py::class_<StringEncOptGlobal>(m, "StringEncOptGlobal",
-    R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_string` protection.
-
-    This option protect the string in a global constructor.
-
-    .. warning::
-
-      With this option, the string will be in clear as soon as the binary is loaded.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
+    callback. Leaves the string unprotected.
     )delim")
     .def(py::init<>());
 
   py::class_<StringEncOptDefault>(m, "StringEncOptDefault",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_string` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
+    callback. Defers the choice of encoding strategy to O-MVLL.
+    )delim")
+    .def(py::init<>());
 
-    Option that defers the choice of the protection to O-MVLL.
+  py::class_<StringEncOptGlobal>(m, "StringEncOptGlobal",
+    R"delim(
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
+    callback. Decodes the string in a global constructor (before ``main``).
+
+    .. warning::
+
+       The string is briefly visible in clear memory as soon as the binary
+       is loaded.
     )delim")
     .def(py::init<>());
 
   py::class_<StringEncOptLocal>(m, "StringEncOptLocal",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_string` protection.
-
-    This option protects the string lazily when used within the function.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
+    callback. Decodes the string lazily at the point of use within the
+    function.
 
     .. danger::
 
-        For large strings, this option can introduce a **huge** overhead if the `loopThreshold` is not used.
-
+       For large strings this can introduce significant overhead if called
+       in a loop.
     )delim")
     .def(py::init<>());
 
   py::class_<StringEncOptReplace>(m, "StringEncOptReplace",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_string` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
+    callback. Replaces the original string with *new_string*.
 
-    This option determines the new string that replaces the one from the parameter
+    :param new_string: The replacement string. Defaults to an empty string.
+    :type new_string: str
     )delim")
-    .def(py::init<>(), "Construct an empty string")
+    .def(py::init<>())
     .def(py::init<std::string>(), "new_string"_a);
 
   // Opaque Field Access
   py::class_<StructAccessOpt>(m, "StructAccessOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_struct_access` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_struct_access`
+    callback.
 
-    This boolean option determines whether the protection must be enabled (e.g. ``StructAccessOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
-    .def(py::init<bool>());
+    .def(py::init<bool>(), "value"_a);
 
   py::class_<VarAccessOpt>(m, "VarAccessOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_variable_access` protection.
+    Option for the
+    :py:meth:`~omvll.ObfuscationConfig.obfuscate_variable_access` callback.
 
-    This boolean option determines whether the protection must be enabled (e.g. ``VarAccessOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
-    .def(py::init<bool>());
+    .def(py::init<bool>(), "value"_a);
 
   // Break Control Flow
   py::class_<BreakControlFlowOpt>(m, "BreakControlFlowOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.break_control_flow` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.break_control_flow`
+    callback.
 
-    This boolean option determines whether the protection must be enabled (e.g. ``BreakControlFlowOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
-    .def(py::init<bool>());
+    .def(py::init<bool>(), "value"_a);
 
   // CFG Flattening
   py::class_<ControlFlowFlatteningOpt>(m, "ControlFlowFlatteningOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.flatten_cfg` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.flatten_cfg` callback.
 
-    This boolean option determines whether the protection must be enabled (e.g. ``ControlFlowFlatteningOpt(False)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
     .def(py::init<bool>(), "value"_a);
 
   // Anti-Hooking
   py::class_<AntiHookOpt>(m, "AntiHookOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.anti_hooking` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.anti_hooking` callback.
 
-    This option only accepts a boolean value (e.g. ``AntiHookOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
     .def(py::init<bool>(), "value"_a);
 
   // MBA
   py::class_<ArithmeticOpt>(m, "ArithmeticOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_arithmetic` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_arithmetic`
+    callback. Defines the number of rounds to apply to arithmetic expressions.
 
-    This option defines the number of rounds to transform arithmetic expressions (e.g. ``ArithmeticOpt(3)``).
-    It also accepts a boolean value which defers the number of rounds to O-MVLL (e.g. ``ArithmeticOpt(True)``).
+    :param rounds_or_value: Number of rounds (``int``, 0–255), or a boolean
+       (``True`` uses O-MVLL's default of 3 rounds, ``False`` disables the pass).
+    :type rounds_or_value: int or bool
+
+    Examples::
+
+       ArithmeticOpt(3)     # 3 explicit rounds
+       ArithmeticOpt(True)  # O-MVLL default (3 rounds)
+       ArithmeticOpt(False) # disabled
     )delim")
     .def(py::init<uint8_t>(), "rounds"_a)
     .def(py::init<bool>(),    "value"_a);
@@ -125,110 +141,133 @@ py::module_ &py_init_obf_opt(py::module_ &m) {
   // Opaque Constants
   py::class_<OpaqueConstantsLowerLimit>(m, "OpaqueConstantsLowerLimit",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_constants` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+    callback. Obfuscates only constants whose value is at or above *limit*.
 
-    This option defines lower limit from which constants must be obfuscated (e.g. ``OpaqueConstantsLowerLimit(100)``).
-    An optional ``arith_rounds`` parameter controls how many rounds of arithmetic obfuscation
-    are applied to the generated opaque expressions (e.g. ``OpaqueConstantsLowerLimit(100, arith_rounds=2)``).
+    :param limit: Lower bound; constants below this value are left unprotected.
+    :type limit: int
+    :param arith_rounds: Additional arithmetic obfuscation rounds. Default ``0``.
+    :type arith_rounds: int
+
+    Examples::
+
+       OpaqueConstantsLowerLimit(100)
+       OpaqueConstantsLowerLimit(100, arith_rounds=2)
     )delim")
     .def(py::init<uint64_t, uint8_t>(), "limit"_a, "arith_rounds"_a = 0);
 
   py::class_<OpaqueConstantsBool>(m, "OpaqueConstantsBool",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_constants` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+    callback. Obfuscates all constants (``True``) or none (``False``).
 
-    This option defines whether or not the constants must be obfuscated. If the value is set to `False`,
-    the constants are not protected otherwise, **all** the constants are protected.
-    An optional ``arith_rounds`` parameter controls how many rounds of arithmetic obfuscation
-    are applied to the generated opaque expressions (e.g. ``OpaqueConstantsBool(True, arith_rounds=2)``).
+    :param value: ``True`` protects all constants, ``False`` disables the pass.
+    :type value: bool
+    :param arith_rounds: Additional arithmetic obfuscation rounds applied to
+       the generated opaque expressions. Default ``0``.
+    :type arith_rounds: int
     )delim")
     .def(py::init<bool, uint8_t>(), "value"_a, "arith_rounds"_a = 0);
 
   py::class_<OpaqueConstantsSkip>(m, "OpaqueConstantsSkip",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_constants` protection.
-
-    Alias for ``OpaqueConstantsBool(False)``
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+    callback. Disables the pass for the current function. Alias for
+    :py:class:`~omvll.OpaqueConstantsBool`\(``False``).
     )delim")
     .def(py::init<>());
 
   py::class_<OpaqueConstantsSet>(m, "OpaqueConstantsSet",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_constants` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+    callback. Obfuscates only the constants in the given list.
 
-    This option takes a list of constants that must be protected by the pass
-    (e.g. ``OpaqueConstantsSet([0x12234, 1, 2])``).
-    An optional ``arith_rounds`` parameter controls how many rounds of arithmetic obfuscation
-    are applied to the generated opaque expressions (e.g. ``OpaqueConstantsSet([1, 2], arith_rounds=2)``).
+    :param constants: Specific constant values to protect.
+    :type constants: list[int]
+    :param arith_rounds: Additional arithmetic obfuscation rounds. Default ``0``.
+    :type arith_rounds: int
+
+    Examples::
+
+       OpaqueConstantsSet([0x1234, 1, 2])
+       OpaqueConstantsSet([1, 2], arith_rounds=2)
     )delim")
     .def(py::init<std::vector<uint64_t>, uint8_t>(), "constants"_a, "arith_rounds"_a = 0);
 
   py::class_<OpaqueConstantsExcludeSet>(m, "OpaqueConstantsExcludeSet",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.obfuscate_constants` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+    callback. Obfuscates all constants **except** those in the given list.
 
-    This option takes a list of constants that cannot be protected by the pass
-    (e.g. ``OpaqueConstantsExcludeSet([0x12234, 1, 2])``).
-    An optional ``arith_rounds`` parameter controls how many rounds of arithmetic obfuscation
-    are applied to the generated opaque expressions (e.g. ``OpaqueConstantsExcludeSet([1, 2], arith_rounds=2)``).
+    :param constants: Constant values to leave unprotected.
+    :type constants: list[int]
+    :param arith_rounds: Additional arithmetic obfuscation rounds. Default ``0``.
+    :type arith_rounds: int
+
+    Examples::
+
+       OpaqueConstantsExcludeSet([0, 1])
+       OpaqueConstantsExcludeSet([0, 1], arith_rounds=2)
     )delim")
     .def(py::init<std::vector<uint64_t>, uint8_t>(), "constants"_a, "arith_rounds"_a = 0);
 
   // Indirect Branch
   py::class_<IndirectBranchOpt>(m, "IndirectBranchOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.indirect_branch` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.indirect_branch`
+    callback.
 
-    This option only accepts a boolean value (e.g. ``IndirectBranchOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
     .def(py::init<bool>(), "value"_a);
 
   // Indirect Call
   py::class_<IndirectCallOpt>(m, "IndirectCallOpt",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.indirect_call` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.indirect_call` callback.
 
-    This option only accepts a boolean value (e.g. ``IndirectCallOpt(True)``)
+    :param value: ``True`` enables the protection, ``False`` disables it.
+    :type value: bool
     )delim")
     .def(py::init<bool>(), "value"_a);
 
   // BasicBlock Duplicate
   py::class_<BasicBlockDuplicateSkip>(m, "BasicBlockDuplicateSkip",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.basic_block_duplicate` protection.
-
-    Alias for not enabling BasicBlockDuplicate.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.basic_block_duplicate`
+    callback. Disables the pass for the current function.
     )delim")
     .def(py::init<>());
 
   py::class_<BasicBlockDuplicateWithProbability>(m, "BasicBlockDuplicateWithProbability",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.basic_block_duplicate` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.basic_block_duplicate`
+    callback. Selects basic blocks to duplicate with the given probability.
 
-    This option defines a probability to be used when choosing basic blocks to be duplicated.
-    For example, ``BasicBlockDuplicateWithProbability(0)`` implies that the pass never runs,
-    whereas ``BasicBlockDuplicateWithProbability(100)`` duplicates all basic blocks in a
-    function.
+    :param probability: Percentage chance (0–100) for each basic block to be
+       duplicated. ``0`` means never, ``100`` duplicates every block.
+    :type probability: int
     )delim")
     .def(py::init<unsigned>(), "probability"_a);
 
   // Function Outline
   py::class_<FunctionOutlineSkip>(m, "FunctionOutlineSkip",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.function_outline` protection.
-
-    Alias for not enabling FunctionOutline.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.function_outline`
+    callback. Disables the pass for the current function.
     )delim")
     .def(py::init<>());
 
   py::class_<FunctionOutlineWithProbability>(m, "FunctionOutlineWithProbability",
     R"delim(
-    Option for the :meth:`omvll.ObfuscationConfig.function_outline` protection.
+    Option for the :py:meth:`~omvll.ObfuscationConfig.function_outline`
+    callback. Selects basic blocks to outline into new functions with the
+    given probability.
 
-    This option defines a probability to be used when choosing basic blocks to be outlined.
-    For example, ``FunctionOutlineWithProbability(0)`` implies that the pass never runs,
-    whereas ``FunctionOutlineWithProbability(100)`` outlines all the candidate basic blocks
-    within a function.
+    :param probability: Percentage chance (0–100) for each candidate block to
+       be outlined. ``0`` means never, ``100`` outlines every candidate.
+    :type probability: int
     )delim")
     .def(py::init<unsigned>(), "probability"_a);
 

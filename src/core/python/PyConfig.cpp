@@ -65,145 +65,166 @@ void OMVLLCtor(py::module_ &m) {
   m.attr("OMVLL_VERSION_FULL") = "OMVLL Version: " OMVLL_VERSION " / " OMVLL_LLVM_VERSION_STRING
                                  " (" OMVLL_LLVM_VERSION ")";
 
-  py::enum_<Phase>(m, "Phase",
-                   R"delim(
+  // pybind11 appends an auto-generated "Members:" list to every enum docstring.
+  // For Sphinx autodoc this is undesirable since it duplicates content
+  {
+    py::options Options;
+#if PYBIND11_VERSION_MAJOR > 2 || (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR >= 11)
+    Options.disable_enum_members_docstring();
+#endif
+
+    py::enum_<Phase>(m, "Phase",
+                     R"delim(
     Enum representing the two LLVM optimization pipeline phases where
-    obfuscation passes can be registered.
+    obfuscation passes can be registered. Used as values in
+    :py:attr:`~omvll.OMVLLConfig.pass_phases`.
 
-    - ``Phase.Early``: runs before LLVM's optimizer (default for all passes).
-    - ``Phase.Last``: runs after LLVM's optimizer.
+    .. py:attribute:: Early
 
-    A pass may be assigned to one or both phases via :attr:`omvll.config.pass_phases`.
+       Runs before LLVM's optimizer. Default phase for all passes.
+
+    .. py:attribute:: Last
+
+       Runs after LLVM's optimizer.
     )delim")
-      .value("Early", Phase::Early)
-      .value("Last", Phase::Last);
+        .value("Early", Phase::Early)
+        .value("Last", Phase::Last);
 
-  py::enum_<Pass>(m, "Pass",
-                  R"delim(
-    Enum representing all available obfuscation passes.
+    py::enum_<Pass>(m, "Pass",
+                    R"delim(
+    Enum representing all available obfuscation passes. Used as keys in
+    :py:attr:`~omvll.OMVLLConfig.pass_phases`.
 
-    Use values of this enum as keys in :attr:`omvll.config.pass_phases`.
+    .. list-table::
+       :header-rows: 1
 
-    To obtain the full list of passes in their execution order, use:
-
-    .. code-block:: python
-
-        list(omvll.Pass)
-
+       * - Value
+         - Corresponding callback
+       * - ``Pass.AntiHook``
+         - :py:meth:`~omvll.ObfuscationConfig.anti_hooking`
+       * - ``Pass.Arithmetic``
+         - :py:meth:`~omvll.ObfuscationConfig.obfuscate_arithmetic`
+       * - ``Pass.BasicBlockDuplicate``
+         - :py:meth:`~omvll.ObfuscationConfig.basic_block_duplicate`
+       * - ``Pass.BreakControlFlow``
+         - :py:meth:`~omvll.ObfuscationConfig.break_control_flow`
+       * - ``Pass.Cleaning``
+         - (ObjC metadata cleaner — no callback)
+       * - ``Pass.ControlFlowFlattening``
+         - :py:meth:`~omvll.ObfuscationConfig.flatten_cfg`
+       * - ``Pass.FunctionOutline``
+         - :py:meth:`~omvll.ObfuscationConfig.function_outline`
+       * - ``Pass.IndirectBranch``
+         - :py:meth:`~omvll.ObfuscationConfig.indirect_branch`
+       * - ``Pass.IndirectCall``
+         - :py:meth:`~omvll.ObfuscationConfig.indirect_call`
+       * - ``Pass.OpaqueConstants``
+         - :py:meth:`~omvll.ObfuscationConfig.obfuscate_constants`
+       * - ``Pass.OpaqueFieldAccess``
+         - :py:meth:`~omvll.ObfuscationConfig.obfuscate_struct_access`,
+           :py:meth:`~omvll.ObfuscationConfig.obfuscate_variable_access`
+       * - ``Pass.StringEncoding``
+         - :py:meth:`~omvll.ObfuscationConfig.obfuscate_string`
     )delim")
-      .value("AntiHook",              Pass::AntiHook)
-      .value("FunctionOutline",       Pass::FunctionOutline)
-      .value("StringEncoding",        Pass::StringEncoding)
-      .value("OpaqueFieldAccess",     Pass::OpaqueFieldAccess)
-      .value("BasicBlockDuplicate",   Pass::BasicBlockDuplicate)
-      .value("ControlFlowFlattening", Pass::ControlFlowFlattening)
-      .value("BreakControlFlow",      Pass::BreakControlFlow)
-      .value("OpaqueConstants",       Pass::OpaqueConstants)
-      .value("Arithmetic",            Pass::Arithmetic)
-      .value("IndirectCall",          Pass::IndirectCall)
-      .value("IndirectBranch",        Pass::IndirectBranch)
-      .value("Cleaning",              Pass::Cleaning);
+        .value("AntiHook",              Pass::AntiHook)
+        .value("FunctionOutline",       Pass::FunctionOutline)
+        .value("StringEncoding",        Pass::StringEncoding)
+        .value("OpaqueFieldAccess",     Pass::OpaqueFieldAccess)
+        .value("BasicBlockDuplicate",   Pass::BasicBlockDuplicate)
+        .value("ControlFlowFlattening", Pass::ControlFlowFlattening)
+        .value("BreakControlFlow",      Pass::BreakControlFlow)
+        .value("OpaqueConstants",       Pass::OpaqueConstants)
+        .value("Arithmetic",            Pass::Arithmetic)
+        .value("IndirectCall",          Pass::IndirectCall)
+        .value("IndirectBranch",        Pass::IndirectBranch)
+        .value("Cleaning",              Pass::Cleaning);
+  }
 
   py::class_<OMVLLConfig>(m, "OMVLLConfig",
                           R"delim(
-    This class is used to configure the global behavior of O-MVLL.
-
-    It can be accessed through the global :attr:`omvll.config` attribute
+    Global configuration object controlling O-MVLL's overall behavior.
+    Accessed via :py:attr:`omvll.config`.
     )delim")
       .def_readwrite("inline_jni_wrappers", &OMVLLConfig::InlineJniWrappers,
                      R"delim(
-                   This boolean attribute is used to force inlining JNI C++ wrapper.
-                   For instance ``GetStringChars``:
+                   Force inlining of JNI C++ wrapper methods such as:
 
                    .. code-block:: cpp
 
-                     const jchar* GetStringChars(jstring string, jboolean* isCopy)
-                     { return functions->GetStringChars(this, string, isCopy); }
+                      const jchar* GetStringChars(jstring string, jboolean* isCopy)
+                      { return functions->GetStringChars(this, string, isCopy); }
 
-                   The default value is ``True``.
+                   Default: ``True``.
+
+                   :type: bool
                    )delim")
 
       .def_readwrite("shuffle_functions", &OMVLLConfig::ShuffleFunctions,
                      R"delim(
-                    Whether the postition of Module's functions should be shuffled.
+                   Randomize the order of functions within each module so that two builds
+                   of the same source do not place functions at the same relative positions.
 
-                    This randomization is used to avoid the same (relative) position of the functions
-                    for two different builds of the protected binary.
+                   Default: ``True``.
 
-                    For instance, if the original source code is composed of the following functions:
-
-                    .. code-block:: cpp
-
-                        void hello();
-                        void hello_world();
-                        void say_hi();
-
-                    In the final (stripped) binary, the functions appear as the following sequence:
-
-                    .. code-block:: text
-
-                        sub_3455() // hello
-                        sub_8A74() // hello_world
-                        sub_AF34() // say_hi
-
-                    If this value is set to ``True`` (which is the default value), the sequence is randomized.
-                    )delim")
+                   :type: bool
+                   )delim")
 
       .def_readwrite("global_mod_exclude", &OMVLLConfig::GlobalModuleExclude,
                      R"delim(
-                    This attribute is a list of strings used to exclude entire modules from obfuscation.
-                    Each entry in the list can be a partial or full match of the module's name.
-                    For example, if a module's name is `a/b/c/d.cpp`, it can be excluded by including `"b/"` in the list.
-                    When a module is excluded, none of the obfuscation passes will be applied to it.
-                    
-                    By default, this list is empty.
-                    )delim")
+                   Module name substrings to exclude from all obfuscation passes. A module
+                   whose path contains any of these strings is skipped entirely. For
+                   example, adding ``"b/"`` would exclude a module at ``a/b/c/d.cpp``.
+
+                   Default: ``[]``.
+
+                   :type: list[str]
+                   )delim")
 
       .def_readwrite("global_func_exclude", &OMVLLConfig::GlobalFunctionExclude,
                      R"delim(
-                    This attribute is a list of strings used to exclude specific functions from obfuscation.
-                    When a function is excluded, none of the obfuscation passes will be applied to it.
-                    
-                    By default, this list is empty.
-                    )delim")
+                   Function name substrings to exclude from all obfuscation passes.
+
+                   Default: ``[]``.
+
+                   :type: list[str]
+                   )delim")
 
       .def_readwrite("probability_seed", &OMVLLConfig::ProbabilitySeed,
                      R"delim(
-                    probability_seed is a configurable value used to initialize the random number generator.
-                    Whenever a random value is required during the obfuscation process,
-                    the generator will use this predefined seed to ensure deterministic and reproducible randomness.
+                   Seed for the random number generator used by probability-based passes
+                   (e.g. :py:class:`~omvll.BasicBlockDuplicateWithProbability`). A fixed
+                   seed makes obfuscation output deterministic across builds.
 
-                    The default value is 1.
-                    )delim")
+                   Default: ``1``.
+
+                   :type: int
+                   )delim")
 
       .def_readwrite("output_folder", &OMVLLConfig::OutputFolder,
                      R"delim(
-                    Output directory where o-mvll stores processed files (e.g., log files).
+                   Directory where O-MVLL writes output files (e.g. log files). Created
+                   automatically if it does not exist. An empty string disables file output.
 
-                    By default, this value is empty.
-                    )delim")
+                   Default: ``""``.
+
+                   :type: str
+                   )delim")
 
       .def_readwrite("pass_phases", &OMVLLConfig::PassPhases,
                      R"delim(
-                    Dictionary mapping passes to the pipeline phase(s) they run in.
+                   Maps each pass to the LLVM pipeline phase(s) it runs in. Passes absent
+                   from this dictionary default to :py:attr:`~omvll.Phase.Early`.
 
-                    Keys are :class:`~omvll.Pass` enum values.
-                    Values are lists of :class:`~omvll.Phase` values.
-                    A pass may appear in one or both phases.
+                   .. code-block:: python
 
-                    Passes absent from this dictionary default to :attr:`~omvll.Phase.Early`.
+                      omvll.config.pass_phases = {
+                          omvll.Pass.Arithmetic:       {omvll.Phase.Early},
+                          omvll.Pass.BreakControlFlow: {omvll.Phase.Last},
+                          omvll.Pass.StringEncoding:   {omvll.Phase.Early, omvll.Phase.Last},
+                      }
 
-                    Example:
-
-                    .. code-block:: python
-
-                        omvll.config.pass_phases = {
-                            omvll.Pass.Arithmetic:        {omvll.Phase.Early},
-                            omvll.Pass.BreakControlFlow:  {omvll.Phase.Last},
-                            omvll.Pass.StringEncoding:    {omvll.Phase.Early, omvll.Phase.Last},
-                        }
-
-                    )delim");
+                   :type: dict[Pass, set[Phase]]
+                   )delim");
 
   m.attr("config") = &Config;
 
@@ -213,217 +234,331 @@ void OMVLLCtor(py::module_ &m) {
 
   py::class_<ObfuscationConfig, PyObfuscationConfig>(m, "ObfuscationConfig",
                                                      R"delim(
-    This class must be inherited by the user to define where and how the obfuscation
-    passes must be enabled.
+    Base class that must be subclassed to configure O-MVLL obfuscation passes.
+
+    Override the callback methods below to control which passes are applied to
+    each function. The configuration file must expose a top-level
+    ``omvll_get_config()`` function that returns an instance of this class.
+    Using :func:`functools.lru_cache` is recommended to avoid repeated
+    instantiation:
+
+    .. note::
+
+       Most callbacks accept ``True``, ``False``, or ``None`` as convenience
+       shorthands in addition to the dedicated option classes. ``None`` is
+       handled explicitly because a Python method that reaches the end without
+       a ``return`` statement implicitly returns ``None`` — so the following
+       pattern works as intended:
+
+       .. code-block:: python
+
+          def break_control_flow(self, mod, func):
+              if func.name == "secret_func":
+                  return True
+              # no return → None → pass disabled for everything else
+
+       ``False`` and ``None`` are therefore equivalent and both disable the
+       pass. The exceptions are :py:meth:`basic_block_duplicate` and
+       :py:meth:`function_outline`, which require a probability-based option
+       class and raise an error if a boolean is returned.
+
+    .. code-block:: python
+
+       @lru_cache(maxsize=1)
+       def omvll_get_config() -> omvll.ObfuscationConfig:
+           return MyConfig()
     )delim")
       .def(py::init<>())
 
       .def("obfuscate_string", &ObfuscationConfig::obfuscateString,
            R"delim(
-         The default user-callback used to configure strings obfuscation.
+         Callback invoked for every string literal found in *function*.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         In addition to returning a string encoding option class directly,
+         the following convenience shorthands are accepted:
 
-         +--------------+-------------------------------------+
-         | Return Value | Interpretation                      |
-         +==============+=====================================+
-         | ``None``     | :class:`~omvll.StringEncOptSkip`    |
-         +--------------+-------------------------------------+
-         | ``False``    | :class:`~omvll.StringEncOptSkip`    |
-         +--------------+-------------------------------------+
-         | ``True``     | :class:`~omvll.StringEncOptDefault` |
-         +--------------+-------------------------------------+
-         | ``str``      | :class:`~omvll.StringEncOptReplace` |
-         +--------------+-------------------------------------+
-         | ``bytes``    | :class:`~omvll.StringEncOptReplace` |
-         +--------------+-------------------------------------+
+         .. list-table::
+            :header-rows: 1
 
-         See the :omvll:`strings-encoding` documentation.
+            * - Return value
+              - Interpretation
+            * - ``None``
+              - :py:class:`~omvll.StringEncOptSkip`
+            * - ``False``
+              - :py:class:`~omvll.StringEncOptSkip`
+            * - ``True``
+              - :py:class:`~omvll.StringEncOptDefault`
+            * - ``str``
+              - :py:class:`~omvll.StringEncOptReplace`
+            * - ``bytes``
+              - :py:class:`~omvll.StringEncOptReplace`
+
+         :param module: The LLVM module containing the function.
+         :type module: :py:class:`~omvll.Module`
+         :param function: The LLVM function containing the string.
+         :type function: :py:class:`~omvll.Function`
+         :param string: The raw bytes of the string literal.
+         :type string: bytes
          )delim",
            "module"_a, "function"_a, "string"_a)
 
       .def("break_control_flow", &ObfuscationConfig::breakControlFlow,
            R"delim(
-         The default user-callback for the pass that breaks
-         the control flow.
+         Callback for the break-control-flow pass.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+-------------------------------------------------+
-         | Return Value | Interpretation                                  |
-         +==============+=================================================+
-         | ``True``     | :class:`~omvll.BreakControlFlowOpt`\(``True``)  |
-         +--------------+-------------------------------------------------+
-         | ``False``    | :class:`~omvll.BreakControlFlowOpt`\(``False``) |
-         +--------------+-------------------------------------------------+
-         | ``None``     | :class:`~omvll.BreakControlFlowOpt`\(``False``) |
-         +--------------+-------------------------------------------------+
-
-         See the :omvll:`control-flow-breaking` documentation.
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.BreakControlFlowOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.BreakControlFlowOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.BreakControlFlowOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("flatten_cfg", &ObfuscationConfig::controlFlowGraphFlattening,
            R"delim(
-         The default user-callback used to configure the
-         control-flow flattening pass.
+         Callback for the control-flow flattening pass.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+------------------------------------------------------+
-         | Return Value | Interpretation                                       |
-         +==============+======================================================+
-         | ``True``     | :class:`~omvll.ControlFlowFlatteningOpt`\(``True``)  |
-         +--------------+------------------------------------------------------+
-         | ``False``    | :class:`~omvll.ControlFlowFlatteningOpt`\(``False``) |
-         +--------------+------------------------------------------------------+
-         | ``None``     | :class:`~omvll.ControlFlowFlatteningOpt`\(``False``) |
-         +--------------+------------------------------------------------------+
-
-         See the :omvll:`control-flow-flattening` documentation.
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.ControlFlowFlatteningOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.ControlFlowFlatteningOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.ControlFlowFlatteningOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("obfuscate_struct_access", &ObfuscationConfig::obfuscateStructAccess,
            R"delim(
-         The default user-callback when obfuscating structures accesses.
+         Callback for obfuscating structure field accesses.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+---------------------------------------------+
-         | Return Value | Interpretation                              |
-         +==============+=============================================+
-         | ``True``     | :class:`~omvll.StructAccessOpt`\(``True``)  |
-         +--------------+---------------------------------------------+
-         | ``False``    | :class:`~omvll.StructAccessOpt`\(``False``) |
-         +--------------+---------------------------------------------+
-         | ``None``     | :class:`~omvll.StructAccessOpt`\(``False``) |
-         +--------------+---------------------------------------------+
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.StructAccessOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.StructAccessOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.StructAccessOpt`\(``False``)
 
-         See the :omvll:`opaque-fields-access` documentation.
+         :param struct: The LLVM struct type being accessed.
+         :type struct: :py:class:`~omvll.Struct`
          )delim",
            "module"_a, "function"_a, "struct"_a)
 
       .def("obfuscate_variable_access",
            &ObfuscationConfig::obfuscateVariableAccess,
            R"delim(
-         The default user-callback when obfuscating global variables access.
+         Callback for obfuscating global variable accesses.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+------------------------------------------+
-         | Return Value | Interpretation                           |
-         +==============+==========================================+
-         | ``True``     | :class:`~omvll.VarAccessOpt`\(``True``)  |
-         +--------------+------------------------------------------+
-         | ``False``    | :class:`~omvll.VarAccessOpt`\(``False``) |
-         +--------------+------------------------------------------+
-         | ``None``     | :class:`~omvll.VarAccessOpt`\(``False``) |
-         +--------------+------------------------------------------+
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.VarAccessOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.VarAccessOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.VarAccessOpt`\(``False``)
 
-         See the :omvll:`opaque-fields-access` documentation.
+         :param variable: The global variable being accessed.
+         :type variable: :py:class:`~omvll.GlobalVariable`
          )delim",
            "module"_a, "function"_a, "variable"_a)
 
       .def("obfuscate_constants", &ObfuscationConfig::obfuscateConstants,
            R"delim(
-         The default user-callback to obfuscate constants.
+         Callback for the opaque constants pass.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +-------------------+--------------------------------------------------------+
-         | Return Value      | Interpretation                                         |
-         +===================+========================================================+
-         | ``True``          | :class:`~omvll.OpaqueConstantsBool`\(``True``)         |
-         +-------------------+--------------------------------------------------------+
-         | ``False``         | :class:`~omvll.OpaqueConstantsBool`\(``False``)        |
-         +-------------------+--------------------------------------------------------+
-         | ``None``          | :class:`~omvll.OpaqueConstantsBool`\(``False``)        |
-         +-------------------+--------------------------------------------------------+
-         | ``list(int ...)`` | :class:`~omvll.omvll.OpaqueConstantsSet`\(``int ...``) |
-         +-------------------+--------------------------------------------------------+
-
-         See the :omvll:`opaque-constants` documentation.
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.OpaqueConstantsBool`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.OpaqueConstantsBool`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.OpaqueConstantsBool`\(``False``)
+            * - ``list[int]``
+              - :py:class:`~omvll.OpaqueConstantsSet`
          )delim",
            "module"_a, "function"_a)
 
       .def("obfuscate_arithmetic", &ObfuscationConfig::obfuscateArithmetics,
            R"delim(
-         The default user-callback when obfuscating arithmetic operations.
+         Callback for the arithmetic obfuscation pass.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+-------------------------------------------+
-         | Return Value | Interpretation                            |
-         +==============+===========================================+
-         | ``True``     | :class:`~omvll.ArithmeticOpt`\(``True``)  |
-         +--------------+-------------------------------------------+
-         | ``False``    | :class:`~omvll.ArithmeticOpt`\(``False``) |
-         +--------------+-------------------------------------------+
-         | ``None``     | :class:`~omvll.ArithmeticOpt`\(``False``) |
-         +--------------+-------------------------------------------+
-
-         See the :omvll:`arithmetic` documentation.
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.ArithmeticOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.ArithmeticOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.ArithmeticOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("anti_hooking", &ObfuscationConfig::antiHooking,
            R"delim(
-         The default user-callback to enable hooking protection.
+         Callback for the anti-hooking pass.
 
-         In addition to the associated class options, O-MVLL interprets these return values as follows:
+         .. list-table::
+            :header-rows: 1
 
-         +--------------+-----------------------------------------+
-         | Return Value | Interpretation                          |
-         +==============+=========================================+
-         | ``True``     | :class:`~omvll.AntiHookOpt`\(``True``)  |
-         +--------------+-----------------------------------------+
-         | ``False``    | :class:`~omvll.AntiHookOpt`\(``False``) |
-         +--------------+-----------------------------------------+
-         | ``None``     | :class:`~omvll.AntiHookOpt`\(``False``) |
-         +--------------+-----------------------------------------+
-
-         See the :omvll:`anti-hook` documentation.
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.AntiHookOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.AntiHookOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.AntiHookOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("indirect_branch", &ObfuscationConfig::indirectBranch,
            R"delim(
-         The default user-callback to enable control-flow edges replacement of
-         ordinary branches into indirect jumps.
+         Callback for the indirect branch pass. Replaces ordinary branches
+         with indirect jumps.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.IndirectBranchOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.IndirectBranchOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.IndirectBranchOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("indirect_call", &ObfuscationConfig::indirectCall,
            R"delim(
-         The default user-callback to convert direct function calls into indirect
-         ones, by splitting the target address into two additive shares.
+         Callback for the indirect call pass. Converts direct function calls
+         into indirect ones by splitting the target address into two additive
+         shares.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.IndirectCallOpt`\(``True``)
+            * - ``False``
+              - :py:class:`~omvll.IndirectCallOpt`\(``False``)
+            * - ``None``
+              - :py:class:`~omvll.IndirectCallOpt`\(``False``)
          )delim",
            "module"_a, "function"_a)
 
       .def("basic_block_duplicate", &ObfuscationConfig::basicBlockDuplicate,
            R"delim(
-           The default user-callback to randomly select basic blocks to be
-           duplicated in a function.
+         Callback for the basic block duplicate pass. Randomly selects basic
+         blocks within *function* to be duplicated.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``None``
+              - :py:class:`~omvll.BasicBlockDuplicateSkip`
+            * - ``int`` (0–100)
+              - :py:class:`~omvll.BasicBlockDuplicateWithProbability`\(``int``)
+            * - ``bool``
+              - fatal error
          )delim",
            "module"_a, "function"_a)
 
       .def("function_outline", &ObfuscationConfig::functionOutline,
            R"delim(
-           The default user-callback to randomly select basic blocks to be
-           outlined each into a new function.
+         Callback for the function outline pass. Randomly selects basic blocks
+         within *function* to be outlined into new standalone functions.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``None``
+              - :py:class:`~omvll.FunctionOutlineSkip`
+            * - ``int`` (0–100)
+              - :py:class:`~omvll.FunctionOutlineWithProbability`\(``int``)
+            * - ``bool``
+              - fatal error
          )delim",
            "module"_a, "function"_a)
 
       .def("report_diff", &ObfuscationConfig::reportDiff,
            R"delim(
-         User-callback to monitor IR-level changes from individual obfuscation passes.
+         Optional callback to monitor IR-level changes produced by individual
+         passes. Override to inspect before/after LLVM IR.
+
+         :param pass_name: Name of the pass that made the change.
+         :type pass_name: str
+         :param original: The original LLVM IR of the function.
+         :type original: str
+         :param obfuscated: The obfuscated LLVM IR of the function.
+         :type obfuscated: str
          )delim",
            "pass_name"_a, "original"_a, "obfuscated"_a)
 
-      .def("default_config", &ObfuscationConfig::defaultConfig, "module"_a,
-           "function"_a, "ModuleExcludes"_a, "FunctionExcludes"_a,
-           "FunctionIncludes"_a, "Probability"_a);
+      .def("default_config", &ObfuscationConfig::defaultConfig,
+           R"delim(
+         Built-in probability-based policy helper:
+
+         - Skips if *module* matches any pattern in *module_excludes*.
+         - Skips if *function* matches any pattern in *function_excludes*.
+         - Enables unconditionally if *function* matches any pattern in
+           *function_includes*.
+         - Otherwise enables with the given *probability* (0–100).
+
+         Typical use as a callback fallback:
+
+         .. code-block:: python
+
+            def break_control_flow(self, mod, func):
+                return omvll.ObfuscationConfig.default_config(
+                    self, mod, func, [], [], [], 10
+                )
+
+         :param module_excludes: Module name substrings to exclude.
+         :type module_excludes: list[str]
+         :param function_excludes: Function name substrings to exclude.
+         :type function_excludes: list[str]
+         :param function_includes: Function name substrings that force the pass on.
+         :type function_includes: list[str]
+         :param probability: Percentage chance (0–100) to apply the pass.
+         :type probability: int
+         :rtype: bool
+         )delim",
+           "module"_a, "function"_a, "module_excludes"_a, "function_excludes"_a,
+           "function_includes"_a, "probability"_a);
 }
 
 std::unique_ptr<py::module_> initOMVLLCore(py::dict Modules) {
