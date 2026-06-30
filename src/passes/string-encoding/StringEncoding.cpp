@@ -361,18 +361,25 @@ Constant *StringEncoding::reconstructConstantAggregate(ConstantAggregate *CA) {
 static bool isABICriticalGlobal(const GlobalVariable &G) {
   StringRef N = G.getName();
   if (N.starts_with("__block_literal_global") ||
-      N.starts_with("__block_descriptor") || N.starts_with("__NSConcrete") ||
-      N.starts_with("OBJC_") || N.starts_with("__objc_") ||
+      N.starts_with("__block_descriptor") ||
+      N.starts_with("__NSConcrete") ||
+      N.starts_with("OBJC_") ||
+      N.starts_with("__objc_") ||
       N.starts_with("_OBJC_"))
     return true;
 
   if (G.hasSection()) {
     StringRef S = G.getSection();
-    if (S.contains("__objc_") || S.contains("__cfstring") ||
+    if (S.contains("__objc_") ||
+        S.contains("__cfstring") ||
         S.contains("__const") && S.contains("objc"))
       return true;
   }
   return false;
+}
+
+static bool isCFString(const GlobalVariable &G) {
+  return G.hasSection() && G.getSection().contains("__cfstring");
 }
 
 bool StringEncoding::processAggregateOfStrings(Instruction &CurrentI, Use &Op,
@@ -380,7 +387,10 @@ bool StringEncoding::processAggregateOfStrings(Instruction &CurrentI, Use &Op,
                                                GlobalVariable *GV,
                                                ObfuscationConfig &UserConfig) {
 
-  if (isABICriticalGlobal(*GV))
+  // CFStrings are ABI-critical (the struct is read by the CF runtime), but we
+  // still want to reach and obfuscate their backing C-string
+  bool IsCFString = isCFString(*GV);
+  if (isABICriticalGlobal(*GV) && !IsCFString)
     return false;
 
   bool Changed = false;
@@ -413,6 +423,12 @@ bool StringEncoding::processAggregateOfStrings(Instruction &CurrentI, Use &Op,
                                    safeGetString(*Data).str()));
     if (isSkip(*EncInfoOpt))
       continue;
+
+    // A CFString's backing C-string is referenced from a constant struct read
+    // by the CoreFoundation runtime, not from an instruction we can rewrite
+    if (IsCFString)
+      EncInfoOpt = std::make_unique<StringEncodingOpt>(StringEncOptGlobal());
+
     if (std::get_if<StringEncOptLocal>(EncInfoOpt.get()))
       IsLocal = true;
 
@@ -437,6 +453,22 @@ bool StringEncoding::processAggregateOfStrings(Instruction &CurrentI, Use &Op,
   return Changed;
 }
 
+// Returns true if the constant (recursively) embeds a global pointing at an
+// eligible string. Covers aggregates such as a CFString struct
+static bool aggregateHasEligibleString(const Constant *C) {
+  if (const auto *Agg = dyn_cast<ConstantAggregate>(C)) {
+    for (unsigned I = 0, E = Agg->getNumOperands(); I != E; ++I)
+      if (aggregateHasEligibleString(Agg->getOperand(I)))
+        return true;
+  } else if (const auto *GV = dyn_cast<GlobalVariable>(C)) {
+    if (isEligible(*GV))
+      if (const auto *CDS =
+              dyn_cast<ConstantDataSequential>(GV->getInitializer()))
+        return isEligible(*CDS);
+  }
+  return false;
+}
+
 static bool hasEligibleGlobal(const Instruction &I) {
   for (const Use &Op : I.operands()) {
     auto *G = dyn_cast<GlobalVariable>(Op->stripPointerCasts());
@@ -456,6 +488,11 @@ static bool hasEligibleGlobal(const Instruction &I) {
       if (auto *Nested = extractGlobalVariable(const_cast<ConstantExpr *>(CE)))
         if (isEligible(*Nested))
           return true;
+    // A CFString (or other aggregate) embeds its backing string in a struct
+    // field, so it is not caught by the operand/pointer-cast checks above
+    if (const auto *Agg = dyn_cast<ConstantAggregate>(Init))
+      if (aggregateHasEligibleString(Agg))
+        return true;
   }
   return false;
 }
@@ -466,7 +503,7 @@ bool StringEncoding::encodeStrings(Function &F, ObfuscationConfig &UserConfig) {
 
   if (!llvm::any_of(instructions(F), hasEligibleGlobal))
     return false;
-
+  
   demotePHINode(F);
 
   for (Instruction &I : make_early_inc_range(instructions(F))) {
@@ -483,11 +520,12 @@ bool StringEncoding::encodeStrings(Function &F, ObfuscationConfig &UserConfig) {
       if (!G || !G->hasInitializer())
         continue;
 
-      // Process array of strings, structs and vector  pointer.
+      // Process array of strings, structs and vector pointer.
       // TODO: Should properly refactor `encodeStrings` instead of having a
       // dedicated helper here.
+      // CFStrings decode their backing string in place (Global encoding)
       if (auto *CA = dyn_cast<ConstantAggregate>(G->getInitializer());
-          CA && G->hasOneUse()) {
+          CA && (G->hasOneUse() || isCFString(*G))) {
         Changed |= processAggregateOfStrings(I, Op, CA, G, UserConfig);
         continue;
       }
@@ -699,6 +737,13 @@ bool StringEncoding::processGlobal(Use &Op, GlobalVariable &G,
   Constant *StrEnc = ConstantDataArray::get(Ctx, Encoded);
   G.setConstant(false);
   G.setInitializer(StrEnc);
+
+  // If the string lives in a read-only literal section (e.g. a CFString
+  // backing store in __TEXT,__cstring), drop the section and unnamed_addr
+  if (G.hasSection()) {
+    G.setSection("");
+    G.setUnnamedAddr(GlobalValue::UnnamedAddr::None);
+  }
 
   // Now create a module constructor for the encoded string.
   FunctionType *FTy = FunctionType::get(Type::getVoidTy(Ctx), /* no args */ {},
