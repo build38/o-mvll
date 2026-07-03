@@ -19,7 +19,7 @@ jobs:
       - name: O-MVLL Android NDK r29d
         shell: bash
         run: |
-          curl -LO https://open-obfuscator.dev.build38.io/static/omvll-deps-ndk-r29d.tar
+          curl -LO https://open-obfuscator.build38.io/static/omvll-deps-ndk-r29d.tar
           mkdir -p /tmp/third-party-ndk29
           tar xvf ./omvll-deps-ndk-r29d.tar --directory=/tmp/third-party-ndk29
           curl -LO https://www.python.org/ftp/python/3.10.7/Python-3.10.7.tgz

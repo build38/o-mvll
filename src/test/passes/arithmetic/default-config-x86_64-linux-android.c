@@ -71,25 +71,31 @@
 // NEWSEED-NEXT   	cmpl	%edx, %eax
 // NEWSEED-NEXT   	jb	.LBB0_2
 
-
 // CHECKV2-LABEL: memcpy_xor:
 // CHECKV2:     .LBB0_2:
-// CHECKV2-NEXT: 	movl	%eax, %ecx
-// CHECKV2-NEXT: 	movzbl	(%rsi,%rcx), %r8d
-// CHECKV2-NEXT: 	leal	(%r8,%r8), %r9d
-// CHECKV2-NEXT: 	andb	$70, %r9b
-// CHECKV2-NEXT: 	subb	%r9b, %r8b
-// CHECKV2-NEXT: 	addb	$35, %r8b
-// CHECKV2-NEXT: 	movb	%r8b, (%rdi,%rcx)
-// CHECKV2-NEXT: 	movl	%eax, %ecx
-// CHECKV2-NEXT: 	notl	%ecx
-// CHECKV2-NEXT: 	orl	$-2, %ecx
-// CHECKV2-NEXT: 	addl	%eax, %ecx
-// CHECKV2-NEXT: 	andl	$1, %eax
-// CHECKV2-NEXT: 	addl	%ecx, %eax
-// CHECKV2-NEXT: 	addl	$2, %eax
-// CHECKV2-NEXT: 	cmpl	%edx, %eax
-// CHECKV2-NEXT: 	jb	.LBB0_2
+// CHECKV2-NEXT:    movl	%eax, %ecx
+// CHECKV2-NEXT:    movsbl	(%rsi,%rcx), %r8d
+// CHECKV2-NEXT:    movl	%r8d, %r9d
+// CHECKV2-NEXT:    notl	%r9d
+// CHECKV2-NEXT:    orl	$-36, %r9d
+// CHECKV2-NEXT:    addl	%r8d, %r9d
+// CHECKV2-NEXT:    addl	$36, %r9d
+// CHECKV2-NEXT:    andl	$35, %r8d
+// CHECKV2-NEXT:    negl	%r8d
+// CHECKV2-NEXT:    movl	%r9d, %r10d
+// CHECKV2-NEXT:    xorl	%r8d, %r10d
+// CHECKV2-NEXT:    andl	%r9d, %r8d
+// CHECKV2-NEXT:    leal	(%r10,%r8,2), %r8d
+// CHECKV2-NEXT:    movb	%r8b, (%rdi,%rcx)
+// CHECKV2-NEXT:    movl	%eax, %ecx
+// CHECKV2-NEXT:    notl	%ecx
+// CHECKV2-NEXT:    orl	$1, %ecx
+// CHECKV2-NEXT:    addl	%eax, %ecx
+// CHECKV2-NEXT:    orl	$1, %eax
+// CHECKV2-NEXT:    addl	%ecx, %eax
+// CHECKV2-NEXT:    incl	%eax
+// CHECKV2-NEXT:    cmpl	%edx, %eax
+// CHECKV2-NEXT:    jb	.LBB0_2
 
 void memcpy_xor(char *dst, const char *src, unsigned len) {
   for (unsigned i = 0; i < len; i += 1) {
