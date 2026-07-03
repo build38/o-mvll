@@ -4,30 +4,37 @@
 # This file is distributed under the Apache License v2.0. See LICENSE for details.
 #
 
-# This script is used to compile the Android NDK r26d LLVM toolchain
+# This script is used to compile the Android NDK r29d LLVM toolchain
 
 set -e
 
 host=$(uname)
 
-NDK_VERSION=26.3.11579264
+NDK_VERSION=29.0.14206865
 
 if [ "$host" == "Darwin" ]; then
     ndk_platform="darwin-x86_64"
-    manifest="manifest_11349228.xml"
+    manifest="manifest_13989888.xml"
 else
     ndk_platform="linux-x86_64"
-    manifest="manifest_11349228.xml"
+    manifest="manifest_13989888.xml"
 fi
 
-mkdir android-llvm-toolchain-r26d-tmp && cd android-llvm-toolchain-r26d-tmp
+mkdir android-llvm-toolchain-r29d-tmp && cd android-llvm-toolchain-r29d-tmp
 repo init -u https://android.googlesource.com/platform/manifest -b llvm-toolchain
 
-cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${manifest} .repo/manifests/
+# Due to AOSP changes, the toolchain builds are not visible externally. 
+# The development branch of the toolchain is mirrored, but the release branches are not.
+# 
+# Hence we use a modified manifest_13989888.xml that uses the public mirrors.
+# 
+# [ERROR] cp $ANDROID_HOME/ndk/$NDK_VERSION/toolchains/llvm/prebuilt/$ndk_platform/${manifest} .repo/manifests/
+wget https://open-obfuscator.dev.build38.io/static/manifest_13989888.xml -P .repo/manifests/
+
 repo init -m ${manifest}
 repo sync -c
 
-python3 toolchain/llvm_android/build.py --skip-tests
+python3 toolchain/llvm_android/build.py --no-build windows --skip-tests
 
 export NDK_STAGE1=$(pwd)/out/stage1-install
 export NDK_STAGE2=$(pwd)/out/stage2-install
@@ -35,7 +42,7 @@ export NDK_STAGE2=$(pwd)/out/stage2-install
 zero_out() {
     local BIN_DIR="$1"
 
-    local KEEP_BINARIES=("clang-17" "clang" "clang++" "clang-cpp" "clang-cl" "clang-extdef-mapping" "clang-format"
+    local KEEP_BINARIES=("clang-21" "clang" "clang++" "clang-cpp" "clang-cl" "clang-extdef-mapping" "clang-format"
                          "clang-nvlink-wrapper" "clang-offload-bundler" "clang-offload-wrapper"
                          "git-clang-format" "hmaptool" "llvm-config" "llvm-link" "llvm-lit"
                          "llvm-tblgen" "FileCheck" "count" "not"
@@ -57,7 +64,7 @@ zero_out $NDK_STAGE1/bin
 zero_out $NDK_STAGE2/bin
 
 # Generate final package
-cd .. && mkdir -p android-llvm-toolchain-r26d/out && cd android-llvm-toolchain-r26d/out
+cd .. && mkdir -p android-llvm-toolchain-r29d/out && cd android-llvm-toolchain-r29d/out
 cp -r ${NDK_STAGE1} .
 cp -r ${NDK_STAGE2} .
 mv ./stage2-install stage2
@@ -65,10 +72,10 @@ mv ./stage2-install stage2
 tar czf stage1-install.tar.gz stage1-install && rm -rf stage1-install
 tar czf stage2.tar.gz stage2 && rm -rf stage2
 cd .. && tar czf out.tar.gz out && rm -rf out
-cd .. && tar czf android-llvm-toolchain-r26d.tar.gz android-llvm-toolchain-r26d
+cd .. && tar czf android-llvm-toolchain-r29d.tar.gz android-llvm-toolchain-r29d
 
 # Clean up
-rm -rf android-llvm-toolchain-r26d
+rm -rf android-llvm-toolchain-r29d
 
 # Move to the final folder
-mv android-llvm-toolchain-r26d.tar.gz ./omvll-deps/
+mv android-llvm-toolchain-r29d.tar.gz ./omvll-deps/

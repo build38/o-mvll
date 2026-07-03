@@ -19,7 +19,7 @@ jobs:
       - name: O-MVLL Android NDK r29d
         shell: bash
         run: |
-          curl -LO https://open-obfuscator.build38.io/static/omvll-deps-ndk-r29d.tar
+          curl -LO https://open-obfuscator.dev.build38.io/static/omvll-deps-ndk-r29d.tar
           mkdir -p /tmp/third-party-ndk29
           tar xvf ./omvll-deps-ndk-r29d.tar --directory=/tmp/third-party-ndk29
           curl -LO https://www.python.org/ftp/python/3.10.7/Python-3.10.7.tgz
@@ -29,6 +29,12 @@ jobs:
             -v ${{ github.workspace }}/dist/Python-3.10.7:/Python-3.10.7 \
             -v $GITHUB_WORKSPACE:/o-mvll \
             openobfuscator/omvll-build:latest bash /o-mvll/scripts/docker/ndk_r29_compile.sh
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: omvll-plugin
+          path: |
+            ${{ github.workspace }}/dist/omvll-ndk.so
       - name: Generate deployment tar
         uses: a7ul/tar-action@v1.1.3
         id: compress

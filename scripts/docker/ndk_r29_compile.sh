@@ -17,6 +17,10 @@ tar xzvf Python-slim.tar.gz
 tar xzvf pybind11.tar.gz
 tar xzvf spdlog-1.10.0-Linux.tar.gz
 
+tar xzvf android-llvm-toolchain-r29d/out.tar.gz -C android-llvm-toolchain-r29d
+tar xzvf android-llvm-toolchain-r29d/out/stage1-install.tar.gz -C android-llvm-toolchain-r29d/out
+tar xzvf android-llvm-toolchain-r29d/out/stage2.tar.gz -C android-llvm-toolchain-r29d/out
+
 # Android NDK is bootstrapped in a so-called 2-stage process. To avoid ABI incompatibilities,
 # we build our plugin with the same toolchain used to build the NDK itself (stage-1). Then,
 # we link the plugin against stage-2 build artifacts.
@@ -34,7 +38,7 @@ cmake -GNinja .. \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_CXX_COMPILER=${NDK_STAGE1}/bin/clang++ \
       -DCMAKE_C_COMPILER=${NDK_STAGE1}/bin/clang \
-      -DCMAKE_CXX_FLAGS="-stdlib=libstdc++ -std=c++17" \
+      -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
       -DPython3_ROOT_DIR=/data/Python-slim \
       -DPython3_LIBRARY=/data/Python-slim/lib/libpython3.10.a \
       -DPython3_INCLUDE_DIR=/data/Python-slim/include/python3.10 \
