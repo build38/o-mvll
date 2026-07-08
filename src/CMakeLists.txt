@@ -234,14 +234,7 @@ llvm_map_components_to_libnames(llvm_libs
   ${LLVM_LIBS_DEP}
 )
 
-# TODO: double-check with NDK on Linux
-if(OMVLL_ABI STREQUAL "Android")
-  target_link_libraries(OMVLL PRIVATE LLVM)
-else()
-  target_link_libraries(OMVLL PRIVATE
-    ${llvm_libs}
-  )
-endif()
+target_link_libraries(OMVLL PRIVATE ${llvm_libs})
 
 if(CMAKE_BUILD_TYPE MATCHES Release AND NOT OMVLL_FORCE_LOG_DEBUG)
   if(APPLE)
