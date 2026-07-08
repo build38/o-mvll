@@ -126,6 +126,7 @@ static void eraseLifetimeMarkers(Function *F) {
 
 bool FunctionOutline::process(Function &F, LLVMContext &Ctx,
                               unsigned Probability) {
+  ScopedTrace TracePassFunc(F.getName(), name());
   SmallVector<BasicBlock *, 32> ToOutline;
   ToOutline.reserve(F.size());
 
@@ -196,6 +197,7 @@ PreservedAnalyses FunctionOutline::run(Module &M, ModuleAnalysisManager &MAM) {
 
   PyConfig &Config = PyConfig::instance();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   std::vector<std::pair<Function *, unsigned>> ToVisit;
   for (Function &F : M) {

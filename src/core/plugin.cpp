@@ -171,7 +171,7 @@ static void initializePluginOnce() {
 }
 
 PassPluginLibraryInfo getOMVLLPluginInfo() {
-  omvll::Logger::set_level(spdlog::level::level_enum::debug);
+  omvll::Logger::set_level(spdlog::level::level_enum::trace);
   llvm::call_once(InitializePluginFlag, initializePluginOnce);
 
   return {LLVM_PLUGIN_API_VERSION, "OMVLL", "1.4.1", [](PassBuilder &PB) {

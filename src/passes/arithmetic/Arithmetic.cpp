@@ -289,6 +289,7 @@ PreservedAnalyses Arithmetic::run(Module &M, ModuleAnalysisManager &FAM) {
   bool Changed = false;
   PyConfig &Config = PyConfig::instance();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
   IRChangesMonitor ModuleChanges(M, name());
 
   // Backup all the functions since the pass adds new functions and thus, break
@@ -308,6 +309,7 @@ PreservedAnalyses Arithmetic::run(Module &M, ModuleAnalysisManager &FAM) {
       continue;
 
     SINFO("[{}] Visiting function {}", name(), F->getName());
+    ScopedTrace TracePassFunc(F->getName(), name());
     Opts.insert({F, std::move(Opt)});
 
     Changed |= runOnFunction(*F);

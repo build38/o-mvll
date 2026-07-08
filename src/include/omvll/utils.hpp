@@ -5,6 +5,7 @@
 // details.
 //
 
+#include <chrono>
 #include <random>
 #include <string>
 
@@ -110,6 +111,24 @@ public:
   static uint64_t generateRange(uint64_t a, uint64_t b);
   static int generate();
   static int checkProbability(int Target);
+};
+
+class ScopedTrace {
+public:
+  explicit ScopedTrace(llvm::StringRef Name, llvm::StringRef Detail = "");
+  ~ScopedTrace();
+
+  ScopedTrace(ScopedTrace &&) = delete;
+  ScopedTrace(const ScopedTrace &) = delete;
+  ScopedTrace &operator=(ScopedTrace &&) = delete;
+  ScopedTrace &operator=(const ScopedTrace &) = delete;
+
+private:
+  std::string Name;
+  std::string Detail;
+  std::chrono::steady_clock::time_point Start;
+
+  void emit(uint64_t Ts, uint64_t Dur) const;
 };
 
 } // end namespace omvll

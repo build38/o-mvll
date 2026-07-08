@@ -29,6 +29,7 @@ namespace omvll {
 
 bool IndirectBranch::process(Function &F, const DataLayout &DL,
                              LLVMContext &Ctx) {
+  ScopedTrace TracePassFunc(F.getName(), name());
   Module &M = *F.getParent();
   std::vector<Instruction *> TerminatorsToReplace;
   SmallPtrSet<BasicBlock *, 32> SuccBlocks;
@@ -147,6 +148,7 @@ PreservedAnalyses IndirectBranch::run(Module &M, ModuleAnalysisManager &MAM) {
   LLVMContext &Ctx = M.getContext();
   const auto &DL = M.getDataLayout();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   for (Function &F : M) {
     IndirectBranchOpt Opt = Config.getUserConfig()->indirectBranch(&M, &F);

@@ -88,6 +88,7 @@ bool BreakControlFlow::runOnFunction(Function &F) {
     return false;
 
   SINFO("[{}] Visiting function {}", name(), F.getName());
+  ScopedTrace TracePassFunc(F.getName(), name());
 
   ValueToValueMapTy VMap;
   ClonedCodeInfo CCI;
@@ -241,6 +242,7 @@ PreservedAnalyses BreakControlFlow::run(Module &M, ModuleAnalysisManager &FAM) {
 
   PyConfig &Config = PyConfig::instance();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   std::vector<Function *> ToVisit;
   for (Function &F : M) {

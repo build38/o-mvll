@@ -135,6 +135,7 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
 
   SINFO("[{}] Visiting function {}", ControlFlowFlattening::name(),
         DemangledName);
+  ScopedTrace TracePassFunc(F.getName().str(), name());
 
   SmallVector<BasicBlock *, 20> FlattedBBs;
   demotePHINode(F);
@@ -481,6 +482,7 @@ PreservedAnalyses ControlFlowFlattening::run(Module &M,
 
   PyConfig &Config = PyConfig::instance();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   for (Function &F : M) {
     if (isFunctionGloballyExcluded(&F) ||

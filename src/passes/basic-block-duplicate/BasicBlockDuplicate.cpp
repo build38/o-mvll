@@ -44,6 +44,7 @@ static Value *buildCoinflip(IRBuilder<> &Builder, Module &M) {
 
 bool BasicBlockDuplicate::process(Function &F, LLVMContext &Ctx,
                                   unsigned Probability) {
+  ScopedTrace TracePassFunc(F.getName(), name());
   SmallVector<BasicBlock *, 64> ToDup;
   ToDup.reserve(F.size());
 
@@ -151,6 +152,7 @@ PreservedAnalyses BasicBlockDuplicate::run(Module &M,
   PyConfig &Config = PyConfig::instance();
   LLVMContext &Ctx = M.getContext();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   BasicBlockDuplicateOpt Opt =
       Config.getUserConfig()->basicBlockDuplicate(&M, nullptr);

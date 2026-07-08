@@ -503,7 +503,8 @@ bool StringEncoding::encodeStrings(Function &F, ObfuscationConfig &UserConfig) {
 
   if (!llvm::any_of(instructions(F), hasEligibleGlobal))
     return false;
-  
+
+  ScopedTrace TracePassFunc(F.getName(), name());
   demotePHINode(F);
 
   for (Instruction &I : make_early_inc_range(instructions(F))) {
@@ -608,6 +609,7 @@ PreservedAnalyses StringEncoding::run(Module &M, ModuleAnalysisManager &MAM) {
 
   bool Changed = false;
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
   auto &Config = PyConfig::instance();
   ObfuscationConfig *UserConfig = Config.getUserConfig();
 

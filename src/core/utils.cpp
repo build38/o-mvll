@@ -3,6 +3,9 @@
 // details.
 //
 
+#include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <optional>
 #include <unistd.h>
 
@@ -204,6 +207,26 @@ static Expected<std::unique_ptr<Module>> loadModule(StringRef Path,
 }
 
 } // end namespace detail
+
+namespace {
+
+using Clock = std::chrono::steady_clock;
+using TimePoint = Clock::time_point;
+
+static const TimePoint GlobalStart = Clock::now();
+
+static uint64_t toUs(TimePoint T) {
+  return std::chrono::duration_cast<std::chrono::microseconds>(
+             T - GlobalStart)
+      .count();
+}
+
+static uint64_t durationUs(TimePoint Start, TimePoint End) {
+  return std::chrono::duration_cast<std::chrono::microseconds>(End - Start)
+      .count();
+}
+
+} // end anonymous namespace
 
 namespace omvll {
 
@@ -635,6 +658,22 @@ void inlineWithoutLifetimeMarkers(CallInst *Call) {
                                        /*InsertLifetime=*/false);
   if (!Result.isSuccess())
     fatalError(Result.getFailureReason());
+}
+
+ScopedTrace::ScopedTrace(llvm::StringRef Name, llvm::StringRef Detail)
+    : Name(Name.str()), Detail(Detail.str()),
+      Start(Clock::now()) {}
+
+ScopedTrace::~ScopedTrace() {
+  auto End = Clock::now();
+  uint64_t Ts = toUs(Start);
+  uint64_t Dur = durationUs(Start, End);
+  emit(Ts, Dur);
+}
+
+void ScopedTrace::emit(uint64_t Ts, uint64_t Dur) const {
+  STRACE("[TRACE] ts={} dur={} name={} detail={}",
+          Ts, Dur, Name, Detail);
 }
 
 } // end namespace omvll

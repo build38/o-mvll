@@ -33,6 +33,7 @@ static uint32_t getRandomShareAligned() {
 /// Share1 and the actual callee address.
 bool IndirectCall::process(Function &F, const DataLayout &DL,
                            LLVMContext &Ctx) {
+  ScopedTrace TracePassFunc(F.getName(), name());
   Module &M = *F.getParent();
   auto *IntPtrTy = DL.getIntPtrType(Ctx);
   SmallVector<Constant *, 32> Shares1, Shares2;
@@ -111,6 +112,7 @@ PreservedAnalyses IndirectCall::run(Module &M, ModuleAnalysisManager &MAM) {
   LLVMContext &Ctx = M.getContext();
   const auto &DL = M.getDataLayout();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   for (Function &F : M) {
     IndirectCallOpt Opt = Config.getUserConfig()->indirectCall(&M, &F);

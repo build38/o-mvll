@@ -223,6 +223,7 @@ PreservedAnalyses OpaqueConstants::run(Module &M, ModuleAnalysisManager &FAM) {
 
   PyConfig &Config = PyConfig::instance();
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   for (Function &F : M) {
     bool ChangedFunction = false;
@@ -230,6 +231,7 @@ PreservedAnalyses OpaqueConstants::run(Module &M, ModuleAnalysisManager &FAM) {
         F.isIntrinsic() || F.getName().starts_with("__omvll"))
       continue;
 
+    ScopedTrace TracePassFunc(F.getName(), name());
     OpaqueConstantsOpt Opt = Config.getUserConfig()->obfuscateConstants(&M, &F);
     OpaqueConstantsOpt *Inserted = nullptr;
     if (isSkip(Opt))

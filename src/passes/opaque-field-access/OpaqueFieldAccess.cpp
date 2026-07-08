@@ -31,6 +31,7 @@ bool OpaqueFieldAccess::runOnStructRead(BasicBlock &BB, LoadInst &Load,
 
   SINFO("[{}] Executing on module {} over structure {}", name(),
         BB.getModule()->getName(), S.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   SmallVector<Value *, 2> Indices(GEP.idx_begin(), GEP.idx_end());
   if (Indices.size() != 2) {
@@ -126,6 +127,7 @@ bool OpaqueFieldAccess::runOnConstantExprRead(BasicBlock &BB, LoadInst &Load,
 
   SINFO("[{}] Executing on module {} over variable {}", name(),
         BB.getModule()->getName(), GV->getName());
+  ScopedTrace TracePassModule(name(), name());
 
   IRBuilder<NoFolder> IRB(&Load);
   Value *OpaqueOffset = IRB.CreateSub(
@@ -208,6 +210,7 @@ bool OpaqueFieldAccess::runOnConstantExprWrite(BasicBlock &BB, StoreInst &Store,
 
   SINFO("[{}] Executing on module {} over variable {}", name(),
         BB.getModule()->getName(), GV->getName());
+  ScopedTrace TracePassModule(name(), name());
 
   IRBuilder<NoFolder> IRB(&Store);
   Value *OpaqueOffset = IRB.CreateOr(
@@ -233,6 +236,7 @@ bool OpaqueFieldAccess::runOnStructWrite(BasicBlock &BB, StoreInst &Store,
 
   SINFO("[{}] Executing on module {} over structure {}", name(),
         BB.getModule()->getName(), S.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   SmallVector<Value *, 2> Indices(GEP.idx_begin(), GEP.idx_end());
   if (Indices.size() != 2) {
@@ -373,6 +377,7 @@ PreservedAnalyses OpaqueFieldAccess::run(Module &M,
     if (isFunctionGloballyExcluded(&F))
       continue;
 
+    ScopedTrace TracePassFunc(F.getName(), name());
     for (BasicBlock &BB : F)
       Changed |= runOnBasicBlock(BB);
   }

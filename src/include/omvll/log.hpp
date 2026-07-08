@@ -20,7 +20,11 @@ namespace omvll {
 #else
 #define SDEBUG(...)
 #endif
+#ifdef OMVLL_TRACE
 #define STRACE(...) omvll::Logger::trace(__VA_ARGS__)
+#else
+#define STRACE(...)
+#endif
 #define SINFO(...) omvll::Logger::info(__VA_ARGS__)
 #define SWARN(...) omvll::Logger::warn(__VA_ARGS__)
 #define SERR(...) omvll::Logger::err(__VA_ARGS__)
@@ -40,7 +44,9 @@ public:
 
   template <typename... Ts>
   static void trace(const char *Fmt, const Ts &...Args) {
+#ifdef OMVLL_TRACE
     CurrentOrDefault()->trace(Fmt, Args...);
+#endif
   }
 
   template <typename... Ts>
@@ -74,7 +80,7 @@ public:
 
 private:
   Logger();
-  spdlog::level::level_enum Level = spdlog::level::debug;
+  spdlog::level::level_enum Level = spdlog::level::trace;
 
   // Default sink used before any thread binds a module.
   std::shared_ptr<spdlog::logger> Default;

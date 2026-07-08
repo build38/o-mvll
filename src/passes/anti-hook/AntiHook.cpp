@@ -56,6 +56,7 @@ bool AntiHook::runOnFunction(Function &F) {
                demangle(F.getName().str()) + " since there is one.");
 
   SDEBUG("[{}] Injecting Anti-Frida prologue in {}", name(), F.getName());
+  ScopedTrace TracePassFunc(F.getName(), name());
 
   size_t Idx = RandomGenerator::generateFullRand() % AntiFridaPrologues.size();
   const PrologueInfoTy &P = AntiFridaPrologues[Idx];

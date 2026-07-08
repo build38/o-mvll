@@ -18,6 +18,7 @@ project(OMVLL
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
 option(OMVLL_FORCE_LOG_DEBUG "Force the log debug output" OFF)
+option(OMVLL_FORCE_LOG_TRACE "Force the log trace output" OFF)
 option(OMVLL_PY_STANDALONE   "Build OMVLL as a standalone Python module" OFF)
 
 if(APPLE)
@@ -81,12 +82,17 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fdiagnostics-color=always")
 
 set(OMVLL_DEBUG 0)
+set(OMVLL_TRACE 0)
 if(CMAKE_BUILD_TYPE MATCHES Release)
   if(OMVLL_FORCE_LOG_DEBUG)
     set(OMVLL_DEBUG 1)
   endif()
+  if(OMVLL_FORCE_LOG_TRACE)
+    set(OMVLL_TRACE 1)
+  endif()
 else()
   set(OMVLL_DEBUG 1)
+  set(OMVLL_TRACE 1)
 endif()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/omvll/config.hpp.in"

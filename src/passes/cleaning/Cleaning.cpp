@@ -26,11 +26,13 @@ PreservedAnalyses Cleaning::run(Module &M, ModuleAnalysisManager &FAM) {
 
   bool Changed = false;
   SINFO("[{}] Executing on module {}", name(), M.getName());
+  ScopedTrace TracePassModule(name(), name());
 
   for (Function &F : M) {
     if (isFunctionGloballyExcluded(&F))
       continue;
 
+    ScopedTrace TracePassFunc(F.getName(), name());
     std::string Name  = demangle(F.getName().str());
     StringRef NRef = Name;
     if (NRef.starts_with("_JNIEnv::") && Config.InlineJniWrappers) {
