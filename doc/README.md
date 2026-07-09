@@ -54,7 +54,9 @@ python3.10 -m venv /tmp/omvll-doc-venv
 /tmp/omvll-doc-venv/bin/pip install sphinx furo
 
 # 2. Build the standalone module
-DEPS=~/Workspace/omvll-v1.4.0-macos-deps        # adjust to your deps tree
+# Dependencies for version X.Y.Z of O-MVLL can be downloaded via
+# https://open-obfuscator.build38.io/static/omvll-vX.Y.Z-macos-deps.tar
+DEPS=~/Workspace/omvll-v1.9.1-macos-deps
 LLVM=$DEPS/LLVM-21.1.6-arm64-Darwin
 PY=/opt/homebrew/opt/python@3.10
 
