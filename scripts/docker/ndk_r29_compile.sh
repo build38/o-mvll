@@ -13,13 +13,20 @@ cp /third-party/omvll-deps-ndk-*/pybind11.tar.gz .
 cp /third-party/omvll-deps-ndk-*/spdlog-1.10.0-Linux.tar.gz .
 
 tar xzvf android-llvm-toolchain-r29d.tar.gz
+rm android-llvm-toolchain-r29d.tar.gz
 tar xzvf Python-slim.tar.gz
+rm Python-slim.tar.gz
 tar xzvf pybind11.tar.gz
+rm pybind11.tar.gz
 tar xzvf spdlog-1.10.0-Linux.tar.gz
+rm spdlog-1.10.0-Linux.tar.gz
 
 tar xzvf android-llvm-toolchain-r29d/out.tar.gz -C android-llvm-toolchain-r29d
+rm android-llvm-toolchain-r29d/out.tar.gz
 tar xzvf android-llvm-toolchain-r29d/out/stage1-install.tar.gz -C android-llvm-toolchain-r29d/out
+rm android-llvm-toolchain-r29d/out/stage1-install.tar.gz
 tar xzvf android-llvm-toolchain-r29d/out/stage2.tar.gz -C android-llvm-toolchain-r29d/out
+rm android-llvm-toolchain-r29d/out/stage2.tar.gz
 
 # Android NDK is bootstrapped in a so-called 2-stage process. To avoid ABI incompatibilities,
 # we build our plugin with the same toolchain used to build the NDK itself (stage-1). Then,
