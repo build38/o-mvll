@@ -65,8 +65,10 @@ static const std::vector<std::pair<std::string, PassFactory>> &getPassRegistry()
        [](ModulePassManager &M) { M.addPass(omvll::IndirectCall()); }},
       {omvll::IndirectBranch::name().str(),
        [](ModulePassManager &M) { M.addPass(omvll::IndirectBranch()); }},
-      {omvll::Cleaning::name().str(),
-       [](ModulePassManager &M) { M.addPass(omvll::Cleaning()); }},
+      {omvll::InlineJni::name().str(),
+       [](ModulePassManager &M) { M.addPass(omvll::InlineJni()); }},
+      {omvll::ShuffleFunctions::name().str(),
+       [](ModulePassManager &M) { M.addPass(omvll::ShuffleFunctions()); }},
   };
   return Registry;
 }

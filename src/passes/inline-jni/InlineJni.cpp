@@ -8,15 +8,15 @@
 
 #include "omvll/log.hpp"
 #include "omvll/utils.hpp"
-#include "omvll/passes/cleaning/Cleaning.hpp"
+#include "omvll/passes/inline-jni/InlineJni.hpp"
 #include "omvll/omvll_config.hpp"
 
 using namespace llvm;
 
 namespace omvll {
 
-PreservedAnalyses Cleaning::run(Module &M, ModuleAnalysisManager &FAM) {
-  if (!Config.Cleaning)
+PreservedAnalyses InlineJni::run(Module &M, ModuleAnalysisManager &FAM) {
+  if (!Config.InlineJniWrappers)
     return PreservedAnalyses::all();
 
   if (isModuleGloballyExcluded(&M)) {
@@ -33,18 +33,13 @@ PreservedAnalyses Cleaning::run(Module &M, ModuleAnalysisManager &FAM) {
       continue;
 
     ScopedTrace TracePassFunc(F.getName(), name());
-    std::string Name  = demangle(F.getName().str());
+    std::string Name = demangle(F.getName().str());
     StringRef NRef = Name;
-    if (NRef.starts_with("_JNIEnv::") && Config.InlineJniWrappers) {
-      SDEBUG("[{}] Inlining {}", Name);
+    if (NRef.starts_with("_JNIEnv::")) {
+      SDEBUG("[{}] Inlining {}", name(), Name);
       F.addFnAttr(Attribute::AlwaysInline);
       Changed = true;
     }
-  }
-
-  if (Config.ShuffleFunctions) {
-    shuffleFunctions(M);
-    Changed = true;
   }
 
   SINFO("[{}] Changes {} applied on module {}", name(), Changed ? "" : "not",

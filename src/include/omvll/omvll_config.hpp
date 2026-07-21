@@ -29,7 +29,8 @@ enum class Pass {
   IndirectCall,
   BasicBlockDuplicate,
   FunctionOutline,
-  Cleaning,
+  InlineJni,
+  ShuffleFunctions,
 };
 
 struct OMVLLConfig {
@@ -37,7 +38,6 @@ struct OMVLLConfig {
   std::vector<std::string> GlobalModuleExclude;
   std::vector<std::string> GlobalFunctionExclude;
   std::string OutputFolder;
-  bool Cleaning;
   bool ShuffleFunctions;
   bool InlineJniWrappers;
   int ProbabilitySeed;

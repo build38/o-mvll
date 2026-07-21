@@ -15,7 +15,6 @@ OMVLLConfig Config;
 void initDefaultConfig() {
   Config.PassPhases.clear();
 
-  Config.Cleaning = true;
   Config.InlineJniWrappers = true;
   Config.ShuffleFunctions = true;
   Config.GlobalModuleExclude.clear();
@@ -37,7 +36,8 @@ static std::optional<Pass> nameToPass(const std::string &InternalName) {
       {"omvll::IndirectCall",          Pass::IndirectCall},
       {"omvll::BasicBlockDuplicate",   Pass::BasicBlockDuplicate},
       {"omvll::FunctionOutline",       Pass::FunctionOutline},
-      {"omvll::Cleaning",              Pass::Cleaning},
+      {"omvll::InlineJni",             Pass::InlineJni},
+      {"omvll::ShuffleFunctions",      Pass::ShuffleFunctions},
   };
   auto It = Table.find(InternalName);
   if (It == Table.end())

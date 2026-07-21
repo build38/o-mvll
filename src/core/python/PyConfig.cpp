@@ -108,8 +108,10 @@ void OMVLLCtor(py::module_ &m) {
          - :py:meth:`~omvll.ObfuscationConfig.basic_block_duplicate`
        * - ``Pass.BreakControlFlow``
          - :py:meth:`~omvll.ObfuscationConfig.break_control_flow`
-       * - ``Pass.Cleaning``
-         - (ObjC metadata cleaner — no callback)
+       * - ``Pass.InlineJni``
+         - (no callback — controlled by ``omvll.config.inline_jni_wrappers``)
+       * - ``Pass.ShuffleFunctions``
+         - (no callback — controlled by ``omvll.config.shuffle_functions``)
        * - ``Pass.ControlFlowFlattening``
          - :py:meth:`~omvll.ObfuscationConfig.flatten_cfg`
        * - ``Pass.FunctionOutline``
@@ -137,7 +139,8 @@ void OMVLLCtor(py::module_ &m) {
         .value("Arithmetic",            Pass::Arithmetic)
         .value("IndirectCall",          Pass::IndirectCall)
         .value("IndirectBranch",        Pass::IndirectBranch)
-        .value("Cleaning",              Pass::Cleaning);
+        .value("InlineJni",             Pass::InlineJni)
+        .value("ShuffleFunctions",      Pass::ShuffleFunctions);
   }
 
   py::class_<OMVLLConfig>(m, "OMVLLConfig",

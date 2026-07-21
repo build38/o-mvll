@@ -9,7 +9,7 @@
 
 namespace omvll {
 
-struct Cleaning : llvm::PassInfoMixin<Cleaning> {
+struct InlineJni : llvm::PassInfoMixin<InlineJni> {
   llvm::PreservedAnalyses run(llvm::Module &M,
                               llvm::ModuleAnalysisManager &FAM);
 };
