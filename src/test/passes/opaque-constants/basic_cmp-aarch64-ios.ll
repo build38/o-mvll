@@ -46,7 +46,7 @@ define i32 @opaque_constants(i32 %val) {
 ; CHECK-O1-NEXT:  %4 = load volatile i32, ptr %opaque.t2, align 8
 ; CHECK-O1-NEXT:  %5 = load volatile i32, ptr %opaque.t1, align 8
 ; CHECK-O1-NEXT:  %6 = add i32 %5, %4, !obf !0
-; CHECK-O1-NEXT:  %cmp = icmp eq i32 %6, %val
+; CHECK-O1-NEXT:  %cmp = icmp eq i32 %val, %6
 entry:
   %cmp = icmp eq i32 %val, -735051776
   br i1 %cmp, label %is_brk, label %not_brk

@@ -3,6 +3,8 @@
 // details.
 //
 
+// REQUIRES: android_abi
+
 // Prepare test output dir with yml-config, py-config and fake python-libs dir
 // RUN: rm -rf %T_cwd
 // RUN: mkdir -p %T_cwd
