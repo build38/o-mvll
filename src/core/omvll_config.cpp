@@ -38,6 +38,7 @@ static std::optional<Pass> nameToPass(const std::string &InternalName) {
       {"omvll::FunctionOutline",       Pass::FunctionOutline},
       {"omvll::InlineJni",             Pass::InlineJni},
       {"omvll::ShuffleFunctions",      Pass::ShuffleFunctions},
+      {"omvll::ShuffleOps",            Pass::ShuffleOps},
   };
   auto It = Table.find(InternalName);
   if (It == Table.end())

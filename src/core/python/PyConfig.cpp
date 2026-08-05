@@ -140,7 +140,8 @@ void OMVLLCtor(py::module_ &m) {
         .value("IndirectCall",          Pass::IndirectCall)
         .value("IndirectBranch",        Pass::IndirectBranch)
         .value("InlineJni",             Pass::InlineJni)
-        .value("ShuffleFunctions",      Pass::ShuffleFunctions);
+        .value("ShuffleFunctions",      Pass::ShuffleFunctions)
+        .value("ShuffleOps",            Pass::ShuffleOps);
   }
 
   py::class_<OMVLLConfig>(m, "OMVLLConfig",
@@ -514,6 +515,29 @@ void OMVLLCtor(py::module_ &m) {
               - :py:class:`~omvll.FunctionOutlineWithProbability`\(``int``)
             * - ``bool``
               - fatal error
+         )delim",
+           "module"_a, "function"_a)
+
+      .def("shuffle_ops", &ObfuscationConfig::shuffleOps,
+           R"delim(
+         Callback for the shuffle-ops pass. Reorders instructions within each
+         basic block using a randomized topological sort (Kahn's algorithm),
+         producing a semantically-equivalent but harder-to-follow instruction
+         sequence.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``True``
+              - :py:class:`~omvll.ShuffleOpsOpt`\(default min_block_size)
+            * - ``False``
+              - Pass disabled for this function
+            * - ``None``
+              - Pass disabled for this function
+            * - ``int``
+              - :py:class:`~omvll.ShuffleOpsOpt`\(min_block_size=value)
          )delim",
            "module"_a, "function"_a)
 

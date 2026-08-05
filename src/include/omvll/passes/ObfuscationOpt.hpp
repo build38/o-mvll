@@ -15,4 +15,5 @@
 #include "omvll/passes/indirect-call/IndirectCallOpt.hpp"
 #include "omvll/passes/opaque-constants/OpaqueConstantsOpt.hpp"
 #include "omvll/passes/opaque-field-access/OpaqueFieldAccessOpt.hpp"
+#include "omvll/passes/shuffle-ops/ShuffleOpsOpt.hpp"
 #include "omvll/passes/string-encoding/StringEncodingOpt.hpp"

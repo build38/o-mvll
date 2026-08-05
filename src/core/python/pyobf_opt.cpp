@@ -271,6 +271,20 @@ py::module_ &py_init_obf_opt(py::module_ &m) {
     )delim")
     .def(py::init<unsigned>(), "probability"_a);
 
+  // ShuffleOps
+  py::class_<ShuffleOpsOpt>(m, "ShuffleOpsOpt",
+    R"delim(
+    Option for the :py:meth:`~omvll.ObfuscationConfig.shuffle_ops` callback.
+    Controls instruction-level reordering within basic blocks.
+
+    :param min_block_size: Minimum number of movable instructions a block must
+                           contain before shuffling is attempted. Blocks with
+                           fewer movable instructions are left untouched.
+                           Defaults to 4.
+    :type min_block_size: int
+    )delim")
+    .def(py::init<uint64_t>(), "min_block_size"_a = ShuffleOpsOpt::DefaultMinBlockSize);
+
   return m;
   // clang-format on
 }

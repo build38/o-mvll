@@ -55,6 +55,8 @@ static const std::vector<std::pair<std::string, PassFactory>> &getPassRegistry()
        [](ModulePassManager &M) { M.addPass(omvll::OpaqueConstants()); }},
       {omvll::Arithmetic::name().str(),
        [](ModulePassManager &M) { M.addPass(omvll::Arithmetic()); }},
+      {omvll::ShuffleOps::name().str(),
+       [](ModulePassManager &M) { M.addPass(omvll::ShuffleOps()); }},
 #ifdef OMVLL_EXPERIMENTAL
       // ObjCleaner must be the last pass as function's name
       // could be changed, which can be confusing for the user.

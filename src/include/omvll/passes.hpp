@@ -13,6 +13,7 @@
 #include "omvll/passes/cfg-flattening/ControlFlowFlattening.hpp"
 #include "omvll/passes/inline-jni/InlineJni.hpp"
 #include "omvll/passes/shuffle-functions/ShuffleFunctions.hpp"
+#include "omvll/passes/shuffle-ops/ShuffleOps.hpp"
 #include "omvll/passes/function-outline/FunctionOutline.hpp"
 #include "omvll/passes/indirect-branch/IndirectBranch.hpp"
 #include "omvll/passes/indirect-call/IndirectCall.hpp"
