@@ -25,6 +25,7 @@ enum class Pass {
   BreakControlFlow,
   OpaqueConstants,
   Arithmetic,
+  BasicBlockSplit,
   IndirectBranch,
   IndirectCall,
   BasicBlockDuplicate,

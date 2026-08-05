@@ -8,6 +8,7 @@
 #include "omvll/passes/anti-hook/AntiHookOpt.hpp"
 #include "omvll/passes/arithmetic/ArithmeticOpt.hpp"
 #include "omvll/passes/basic-block-duplicate/BasicBlockDuplicateOpt.hpp"
+#include "omvll/passes/basic-block-split/BasicBlockSplitOpt.hpp"
 #include "omvll/passes/break-cfg/BreakControlFlowOpt.hpp"
 #include "omvll/passes/cfg-flattening/ControlFlowFlatteningOpt.hpp"
 #include "omvll/passes/function-outline/FunctionOutlineOpt.hpp"

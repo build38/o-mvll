@@ -106,6 +106,8 @@ void OMVLLCtor(py::module_ &m) {
          - :py:meth:`~omvll.ObfuscationConfig.obfuscate_arithmetic`
        * - ``Pass.BasicBlockDuplicate``
          - :py:meth:`~omvll.ObfuscationConfig.basic_block_duplicate`
+       * - ``Pass.BasicBlockSplit``
+         - :py:meth:`~omvll.ObfuscationConfig.basic_block_split`
        * - ``Pass.BreakControlFlow``
          - :py:meth:`~omvll.ObfuscationConfig.break_control_flow`
        * - ``Pass.InlineJni``
@@ -133,6 +135,7 @@ void OMVLLCtor(py::module_ &m) {
         .value("StringEncoding",        Pass::StringEncoding)
         .value("OpaqueFieldAccess",     Pass::OpaqueFieldAccess)
         .value("BasicBlockDuplicate",   Pass::BasicBlockDuplicate)
+        .value("BasicBlockSplit",       Pass::BasicBlockSplit)
         .value("ControlFlowFlattening", Pass::ControlFlowFlattening)
         .value("BreakControlFlow",      Pass::BreakControlFlow)
         .value("OpaqueConstants",       Pass::OpaqueConstants)
@@ -498,6 +501,27 @@ void OMVLLCtor(py::module_ &m) {
          )delim",
            "module"_a, "function"_a)
 
+      .def("basic_block_split", &ObfuscationConfig::basicBlockSplit,
+           R"delim(
+         Callback for the basic block split pass. Randomly selects basic blocks
+         within *function* and splits each in half, increasing the number of
+         nodes in the control-flow graph. This is not obfuscation by itself, but
+         it gives later CFG-manipulating passes more places to work with.
+
+         .. list-table::
+            :header-rows: 1
+
+            * - Return value
+              - Interpretation
+            * - ``None``
+              - :py:class:`~omvll.BasicBlockSplitSkip`
+            * - ``int`` (0–100)
+              - :py:class:`~omvll.BasicBlockSplitWithProbability`\(``int``)
+            * - ``bool``
+              - fatal error
+         )delim",
+           "module"_a, "function"_a)
+      
       .def("function_outline", &ObfuscationConfig::functionOutline,
            R"delim(
          Callback for the function outline pass. Randomly selects basic blocks
