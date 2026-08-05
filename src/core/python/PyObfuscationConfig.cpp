@@ -465,6 +465,10 @@ bool PyObfuscationConfig::defaultConfig(
     const std::vector<std::string> &FunctionExcludes,
     const std::vector<std::string> &FunctionIncludes, int Probability,
     const std::string &Annotation) {
+      
+  [[maybe_unused]] llvm::StringRef FunctionName =
+      F ? F->getName() : "<none>";
+
   // Exclude modules.
   if (!ModuleExcludes.empty() &&
       llvm::count_if(ModuleExcludes, [&](const auto &ExcludedModule) {
@@ -475,11 +479,11 @@ bool PyObfuscationConfig::defaultConfig(
   }
 
   // Exclude functions.
-  if (!FunctionExcludes.empty() &&
+  if (F && !FunctionExcludes.empty() &&
       llvm::count_if(FunctionExcludes, [&](const auto &ExcludedFunction) {
         return F->getName().contains(ExcludedFunction);
       }) != 0) {
-    SDEBUG("defaultConfig: Function {} is excluded", F->getName());
+    SDEBUG("defaultConfig: Function {} is excluded", FunctionName);
     return false;
   }
 
@@ -488,33 +492,33 @@ bool PyObfuscationConfig::defaultConfig(
   if (!Annotation.empty() &&
       functionHasAnnotation(F, "!" + Annotation)) {
     SDEBUG("defaultConfig: Function {} is excluded by annotation '!{}'",
-           F->getName(), Annotation);
+           FunctionName, Annotation);
     return false;
   }
 
   // Include functions.
-  if (!FunctionIncludes.empty() &&
+  if (F && !FunctionIncludes.empty() &&
       llvm::count_if(FunctionIncludes, [&](const auto &IncludedFunction) {
         return F->getName().contains(IncludedFunction);
       }) != 0) {
-    SDEBUG("defaultConfig: Function {} is added", F->getName());
+    SDEBUG("defaultConfig: Function {} is added", FunctionName);
     return true;
   }
 
   // Source-level annotation opt-in.
   if (!Annotation.empty() && functionHasAnnotation(F, Annotation)) {
     SDEBUG("defaultConfig: Function {} is added by annotation '{}'",
-           F->getName(), Annotation);
+           FunctionName, Annotation);
     return true;
   }
 
   if (RandomGenerator::checkProbability(Probability)) {
     SDEBUG("defaultConfig: Function {} is added because of probability",
-           F->getName());
+           FunctionName);
     return true;
   } else {
     SDEBUG("defaultConfig: Function {} is not added because of probability",
-           F->getName());
+           FunctionName);
     return false;
   }
 }
