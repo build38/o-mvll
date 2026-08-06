@@ -59,6 +59,9 @@ struct ObfuscationConfig {
   virtual BasicBlockDuplicateOpt basicBlockDuplicate(llvm::Module *M,
                                                      llvm::Function *F) = 0;
 
+  virtual BasicBlockSplitOpt basicBlockSplit(llvm::Module *M,
+                                             llvm::Function *F) = 0;
+
   virtual FunctionOutlineOpt functionOutline(llvm::Module *M,
                                              llvm::Function *F) = 0;
 

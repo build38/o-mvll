@@ -43,6 +43,9 @@ class PyObfuscationConfig : public ObfuscationConfig {
 
   BasicBlockDuplicateOpt basicBlockDuplicate(llvm::Module *M,
                                              llvm::Function *F) override;
+  
+  BasicBlockSplitOpt basicBlockSplit(llvm::Module *M,
+                                     llvm::Function *F) override;
 
   FunctionOutlineOpt functionOutline(llvm::Module *M,
                                      llvm::Function *F) override;
