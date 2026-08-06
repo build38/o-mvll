@@ -38,9 +38,9 @@ namespace omvll {
 //                        that must be preserved.
 //  EH pads        — LandingPadInst/CatchPadInst/CleanupPadInst must appear at
 //                   fixed positions dictated by exception-handling unwinding.
-//  mayThrow       — instructions that can throw (e.g. sdiv/srem with a
-//                   non-constant divisor) must keep their position relative to
-//                   any instruction with side effects.
+//  mayThrow       — instructions that LLVM models as potentially throwing must
+//                   keep their position relative to any instruction with side
+//                   effects.
 // ---------------------------------------------------------------------------
 static bool isSafeToShuffle(const Instruction *I) {
   if (isa<PHINode>(I))
@@ -173,7 +173,7 @@ bool ShuffleOps::runOnBasicBlock(BasicBlock &BB, uint64_t MinBlockSize) {
       // immediately before the previous insertion point.
       Instruction *Cursor = BarrierAfter;
       for (auto It = NewOrder.rbegin(); It != NewOrder.rend(); ++It) {
-        (*It)->moveBefore(Cursor);
+        (*It)->moveBeforePreserving(Cursor);
         Cursor = *It;
       }
       Changed = true;
