@@ -173,7 +173,7 @@ bool ShuffleOps::runOnBasicBlock(BasicBlock &BB, uint64_t MinBlockSize) {
       // immediately before the previous insertion point.
       Instruction *Cursor = BarrierAfter;
       for (auto It = NewOrder.rbegin(); It != NewOrder.rend(); ++It) {
-        (*It)->moveBeforePreserving(Cursor);
+        (*It)->moveBeforePreserving(Cursor->getIterator());
         Cursor = *It;
       }
       Changed = true;

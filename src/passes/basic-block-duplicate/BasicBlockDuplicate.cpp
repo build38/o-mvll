@@ -65,13 +65,13 @@ bool BasicBlockDuplicate::process(Function &F, LLVMContext &Ctx,
 
   IRBuilder<> Builder(Ctx);
   for (BasicBlock *BB : ToDup) {
-    Instruction *SplitPt = BB->getFirstNonPHI();
-    if (!SplitPt)
+    BasicBlock::iterator SplitIt = BB->getFirstNonPHIIt();
+    if (SplitIt == BB->end())
       continue;
 
     // Duplicate the basic block and remap its instruction operands via VMap.
     ValueToValueMapTy VMap;
-    BasicBlock *OldBB = SplitBlock(BB, SplitPt);
+    BasicBlock *OldBB = SplitBlock(BB, SplitIt);
     BasicBlock *NewBB = CloneBasicBlock(OldBB, VMap, ".clone", BB->getParent());
     SmallVector<BasicBlock *, 1> Blocks{NewBB};
     remapInstructionsInBlocks(Blocks, VMap);
