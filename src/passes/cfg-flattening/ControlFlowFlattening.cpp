@@ -21,6 +21,8 @@
 #include "omvll/passes/cfg-flattening/ControlFlowFlattening.hpp"
 #include "omvll/utils.hpp"
 
+#include <optional>
+
 using namespace llvm;
 
 namespace omvll {
@@ -29,40 +31,66 @@ constexpr uint32_t Encode(uint32_t Id, uint32_t X, uint32_t Y) {
   return (Id ^ X) + Y;
 }
 
+// Identity inline assembly: the result is a fixed value at runtime, but
+// neither the optimizer nor the backend can fold it back into a constant.
+template <class IRBTy> Value *EmitOpaqueInt(IRBTy &IRB, uint32_t V) {
+  auto *FType = FunctionType::get(IRB.getInt32Ty(), {IRB.getInt32Ty()}, false);
+  return IRB.CreateCall(FType,
+                        InlineAsm::get(FType, "", "=r,0",
+                                       /* hasSideEffects */ false,
+                                       /* isStackAligned */ false),
+                        {IRB.getInt32(V)});
+}
+
+// Absolute state update: the block holds the raw id and the switch label is
+// recomputed at runtime from the opaque key, so it never appears literally.
 template <class IRBTy>
 void EmitTransition(IRBTy &IRB, AllocaInst *SV, BasicBlock *Dispatch,
-                    uint32_t encId, uint32_t X, uint32_t Y) {
-  IRB.CreateStore(ConstantInt::get(IRB.getInt32Ty(), encId), SV);
-  LoadInst *Val = IRB.CreateLoad(IRB.getInt32Ty(), SV, true);
-
-  IRB.CreateStore(
-      IRB.CreateAdd(IRB.CreateXor(Val, ConstantInt::get(IRB.getInt32Ty(), X)),
-                    ConstantInt::get(IRB.getInt32Ty(), Y)),
-      SV, true);
-
+                    uint32_t RawId, Value *X, Value *Y) {
+  IRB.CreateStore(IRB.CreateAdd(IRB.CreateXor(IRB.getInt32(RawId), X), Y), SV,
+                  true);
   IRB.CreateBr(Dispatch);
 }
 
 template <class IRBTy>
 void EmitTransition(IRBTy &IRB, AllocaInst *SV, BasicBlock *Dispatch,
-                    AllocaInst *TT, AllocaInst *TF, Value *Cond,
-                    uint32_t TrueId, uint32_t FalseId, uint32_t X, uint32_t Y) {
-  IRB.CreateStore(ConstantInt::get(IRB.getInt32Ty(), TrueId), TT);
-  IRB.CreateStore(ConstantInt::get(IRB.getInt32Ty(), FalseId), TF);
-
-  LoadInst *True = IRB.CreateLoad(IRB.getInt32Ty(), TT, true);
-  LoadInst *False = IRB.CreateLoad(IRB.getInt32Ty(), TF, true);
-
-  auto *EncTrue =
-      IRB.CreateAdd(IRB.CreateXor(True, ConstantInt::get(IRB.getInt32Ty(), X)),
-                    ConstantInt::get(IRB.getInt32Ty(), Y));
-
-  auto *EncFalse =
-      IRB.CreateAdd(IRB.CreateXor(False, ConstantInt::get(IRB.getInt32Ty(), X)),
-                    ConstantInt::get(IRB.getInt32Ty(), Y));
-
-  IRB.CreateStore(IRB.CreateSelect(Cond, EncTrue, EncFalse), SV, true);
+                    Value *Cond, uint32_t TrueRawId, uint32_t FalseRawId,
+                    Value *X, Value *Y) {
+  Value *RawId =
+      IRB.CreateSelect(Cond, IRB.getInt32(TrueRawId), IRB.getInt32(FalseRawId));
+  IRB.CreateStore(IRB.CreateAdd(IRB.CreateXor(RawId, X), Y), SV, true);
   IRB.CreateBr(Dispatch);
+}
+
+// Relative state update: the next label is derived from the current one, so
+// the constant left in the block is meaningless without the predecessor.
+template <class IRBTy>
+void EmitRelTransition(IRBTy &IRB, AllocaInst *SV, BasicBlock *Dispatch,
+                       uint32_t Delta) {
+  LoadInst *Cur = IRB.CreateLoad(IRB.getInt32Ty(), SV, true);
+  IRB.CreateStore(IRB.CreateXor(Cur, IRB.getInt32(Delta)), SV, true);
+  IRB.CreateBr(Dispatch);
+}
+
+template <class IRBTy>
+void EmitRelTransition(IRBTy &IRB, AllocaInst *SV, BasicBlock *Dispatch,
+                       Value *Cond, uint32_t TrueDelta, uint32_t FalseDelta) {
+  Value *Delta =
+      IRB.CreateSelect(Cond, IRB.getInt32(TrueDelta), IRB.getInt32(FalseDelta));
+  LoadInst *Cur = IRB.CreateLoad(IRB.getInt32Ty(), SV, true);
+  IRB.CreateStore(IRB.CreateXor(Cur, Delta), SV, true);
+  IRB.CreateBr(Dispatch);
+}
+
+// A longjmp resumes with whatever state the frame last held, which a relative
+// update would never recover from.
+static bool canReturnTwice(const Function &F) {
+  for (const BasicBlock &BB : F)
+    for (const Instruction &I : BB)
+      if (const auto *CB = dyn_cast<CallBase>(&I))
+        if (CB->hasFnAttr(Attribute::ReturnsTwice))
+          return true;
+  return false;
 }
 
 template <class IRBTy> void EmitDefaultCaseAssembly(IRBTy &IRB, Triple TT) {
@@ -128,10 +156,18 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
     if (containsSwiftErrorAlloca(BB))
       return false;
 
+  // The dispatcher takes over the entry block's terminator, so it has to be
+  // one whose edges the switch can take over.
+  const Instruction *EntryTerm = F.getEntryBlock().getTerminator();
+  if (EntryTerm->getNumSuccessors() == 0 || isa<IndirectBrInst>(EntryTerm) ||
+      isa<CallBrInst>(EntryTerm))
+    return false;
+
   bool Changed = false;
   std::string DemangledName = demangle(F.getName().str());
-  const uint8_t X = RandomGenerator::generateRange(10, 254);
-  const uint8_t Y = RandomGenerator::generateRange(10, 254);
+  const uint32_t X = RandomGenerator::generateRange(10, UINT32_MAX);
+  const uint32_t Y = RandomGenerator::generateRange(10, UINT32_MAX);
+  const bool UseRelative = !canReturnTwice(F);
 
   SINFO("[{}] Visiting function {}", ControlFlowFlattening::name(),
         DemangledName);
@@ -142,6 +178,10 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
 
   BasicBlock *EntryBlock = &F.getEntryBlock();
   SmallPtrSet<BasicBlock *, 8> NormalDest2Split;
+
+  // Blocks that keep an edge bypassing the dispatcher. The state they observe
+  // belongs to their predecessor, so they cannot update it relatively.
+  SmallPtrSet<BasicBlock *, 8> DirectEntry;
 
   auto IsFromInvoke = [](const auto &BB) {
     return any_of(predecessors(&BB), [](const auto *Pred) {
@@ -178,6 +218,7 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
   for (BasicBlock *BB : NormalDest2Split) {
     auto *Trampoline = BasicBlock::Create(BB->getContext(), ".normal_split",
                                           BB->getParent(), BB);
+    DirectEntry.insert(Trampoline);
     for (BasicBlock *Pred : predecessors(BB)) {
       // Handle Invoke
       if (auto *Invoke = dyn_cast<InvokeInst>(Pred->getTerminator())) {
@@ -215,6 +256,22 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
       continue;
 
     FlattedBBs.push_back(&BB);
+  }
+
+  // Terminators left untouched below keep branching to their successors
+  // directly, and landing pads are still reached through the unwind edge.
+  for (BasicBlock &BB : F) {
+    Instruction *Term = BB.getTerminator();
+    if (isa<IndirectBrInst>(Term) || isa<CallBrInst>(Term)) {
+      for (BasicBlock *Succ : successors(&BB))
+        DirectEntry.insert(Succ);
+      continue;
+    }
+
+    // Only the cases of a switch are routed through the dispatcher below, its
+    // default edge stays as it is.
+    if (auto *Switch = dyn_cast<SwitchInst>(Term))
+      DirectEntry.insert(Switch->getDefaultDest());
   }
 
   const size_t BlockSize =
@@ -262,6 +319,10 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
 
   SDEBUG("[{}] Erasing {}", ControlFlowFlattening::name(),
          ToString(*EntryBlock->getTerminator()));
+
+  // The block the entry used to fall through to becomes the initial state. It
+  // is not necessarily the one that comes next in the layout.
+  BasicBlock *FirstBlock = EntryBlock->getTerminator()->getSuccessor(0);
   EntryBlock->getTerminator()->eraseFromParent();
 
   // Create a state encoding for the BB to flatten.
@@ -288,13 +349,21 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
   IRBuilder<> EntryIR(EntryBlock);
   AllocaInst *SwitchVar =
       EntryIR.CreateAlloca(EntryIR.getInt32Ty(), 0, "SwitchVar");
-  AllocaInst *TmpTrue =
-      EntryIR.CreateAlloca(EntryIR.getInt32Ty(), 0, "TmpTrue");
-  AllocaInst *TmpFalse =
-      EntryIR.CreateAlloca(EntryIR.getInt32Ty(), 0, "TmpFalse");
 
-  EntryIR.CreateStore(EntryIR.getInt32(Encode(SwitchEnc[FlattedBBs[0]], X, Y)),
-                      SwitchVar);
+  Value *OpaqueX = EmitOpaqueInt(EntryIR, X);
+  Value *OpaqueY = EmitOpaqueInt(EntryIR, Y);
+
+  auto ItFirst = SwitchEnc.find(FirstBlock);
+  if (ItFirst == SwitchEnc.end())
+    fatalError(
+        fmt::format("Unable to find the encoded id for the entry successor: {}",
+                    ToString(*FirstBlock)));
+
+  EntryIR.CreateStore(
+      EntryIR.CreateAdd(
+          EntryIR.CreateXor(EntryIR.getInt32(ItFirst->second), OpaqueX),
+          OpaqueY),
+      SwitchVar, true);
 
   auto &Ctx = F.getContext();
   auto *FlatLoopEntry =
@@ -336,9 +405,21 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
     Switch->addCase(Id, ToFlat);
   }
 
+  // The state observed by a block is its own label, unless the block can also
+  // be entered without going through the dispatcher.
+  auto CurrentLabel = [&](BasicBlock *BB) -> std::optional<uint32_t> {
+    if (!UseRelative || DirectEntry.contains(BB))
+      return std::nullopt;
+    auto It = SwitchEnc.find(BB);
+    if (It == SwitchEnc.end())
+      return std::nullopt;
+    return Encode(It->second, X, Y);
+  };
+
   // Update the basic block with the switch var.
   for (BasicBlock *ToFlat : FlattedBBs) {
     Instruction *Term = ToFlat->getTerminator();
+    std::optional<uint32_t> CurLabel = CurrentLabel(ToFlat);
     SDEBUG("[{}] Flattening {} ({})", ControlFlowFlattening::name(),
            ToString(*ToFlat), ToString(*Term));
 
@@ -394,7 +475,11 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
         const uint32_t EncId = ItEncId->second;
         auto *DispatchBlock = BasicBlock::Create(Ctx, "", &F, FlatLoopEnd);
         IRBuilder IRB(DispatchBlock);
-        EmitTransition(IRB, SwitchVar, FlatLoopEnd, EncId, X, Y);
+        if (CurLabel)
+          EmitRelTransition(IRB, SwitchVar, FlatLoopEnd,
+                            *CurLabel ^ Encode(EncId, X, Y));
+        else
+          EmitTransition(IRB, SwitchVar, FlatLoopEnd, EncId, OpaqueX, OpaqueY);
         SwitchTerm->setSuccessor(Handle.getSuccessorIndex(), DispatchBlock);
       }
 
@@ -422,7 +507,11 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
 
       const uint32_t EncId = ItEncId->second;
       IRBuilder IRB(Branch);
-      EmitTransition(IRB, SwitchVar, FlatLoopEnd, EncId, X, Y);
+      if (CurLabel)
+        EmitRelTransition(IRB, SwitchVar, FlatLoopEnd,
+                          *CurLabel ^ Encode(EncId, X, Y));
+      else
+        EmitTransition(IRB, SwitchVar, FlatLoopEnd, EncId, OpaqueX, OpaqueY);
       Branch->eraseFromParent();
       continue;
     }
@@ -461,8 +550,13 @@ bool ControlFlowFlattening::runOnFunction(Function &F) {
       const uint32_t FalseEncId = ItFalse->second;
 
       IRBuilder IRB(Branch);
-      EmitTransition(IRB, SwitchVar, FlatLoopEnd, TmpTrue, TmpFalse,
-                     Branch->getCondition(), TrueEncId, FalseEncId, X, Y);
+      if (CurLabel)
+        EmitRelTransition(IRB, SwitchVar, FlatLoopEnd, Branch->getCondition(),
+                          *CurLabel ^ Encode(TrueEncId, X, Y),
+                          *CurLabel ^ Encode(FalseEncId, X, Y));
+      else
+        EmitTransition(IRB, SwitchVar, FlatLoopEnd, Branch->getCondition(),
+                       TrueEncId, FalseEncId, OpaqueX, OpaqueY);
       Branch->eraseFromParent();
       continue;
     }

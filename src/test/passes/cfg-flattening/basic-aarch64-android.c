@@ -7,27 +7,13 @@
 
 // RUN: env OMVLL_CONFIG=%S/config_all.py clang -target aarch64-linux-android -fpass-plugin=%libOMVLL -O1 -fno-verbose-asm -S %s -o - | FileCheck --check-prefix=FLAT-ANDROID %s
 
-// Check for jump table targets setup at the beginning of the function.
+// Check for the dispatcher's default case, which only the flattening pass
+// emits. The state values themselves depend on the RNG seed.
 
 // FLAT-ANDROID-LABEL:    check_password:
-// FLAT-ANDROID:            mov	w16, #114
-// FLAT-ANDROID-NEXT:   	movk	w17, #47507, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w2, #37211, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w3, #60668, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w4, #47507, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w5, #3652, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w6, #7153, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w7, #25844, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w19, #29878, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w20, #14846, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w21, #25844, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w22, #3652, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w23, #31029, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w24, #31029, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w25, #60668, lsl #16
-// FLAT-ANDROID-NEXT:   	movk	w26, #29878, lsl #16
-// FLAT-ANDROID-NEXT:   	stur	w11, [x29, #-4]
-// FLAT-ANDROID-NEXT:   	b	.LBB0_4
+// FLAT-ANDROID:            ldr	x1, #-8
+// FLAT-ANDROID:            blr	x1
+// FLAT-ANDROID:            mov	x0, x1
 
 int check_password(const char *passwd, unsigned len) {
   if (len != 5) {
